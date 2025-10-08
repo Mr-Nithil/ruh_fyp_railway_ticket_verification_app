@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/models/user_model.dart';
 
 class FirestoreService {
@@ -85,5 +86,17 @@ class FirestoreService {
     } catch (e) {
       throw Exception('Failed to check user document: $e');
     }
+  }
+
+  Future<Map<String, dynamic>?> getUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      return doc.data();
+    }
+    return null;
   }
 }

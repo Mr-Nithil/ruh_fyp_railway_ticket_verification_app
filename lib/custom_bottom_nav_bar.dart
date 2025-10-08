@@ -14,7 +14,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   int _currentIndex = 1; // Start with Home (middle item)
 
   // List of screens for each tab
-  final List<Widget> _screens = const [
+  final List<Widget> _screens = [
     ProfileScreen(),
     HomeScreen(),
     SettingsScreen(),
@@ -28,10 +28,14 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
     return SafeArea(
       top: false,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(_titles[_currentIndex]),
-          automaticallyImplyLeading: false,
-        ),
+        // appBar: AppBar(
+        //   backgroundColor: Colors.white,
+        //   title: Text(
+        //     _titles[_currentIndex],
+        //     style: TextStyle(color: Colors.black),
+        //   ),
+        //   automaticallyImplyLeading: false,
+        // ),
         body: _screens[_currentIndex],
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
@@ -53,7 +57,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
             },
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.white,
-            selectedItemColor: Colors.blue,
+            selectedItemColor: Colors.green,
             unselectedItemColor: Colors.grey,
             selectedFontSize: 12,
             unselectedFontSize: 12,
