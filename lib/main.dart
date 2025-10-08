@@ -1,8 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/custom_bottom_nav_bar.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/auth_controller.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/home/home_screen.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/logo_screen.dart';
 
 void main() async {
@@ -24,11 +24,33 @@ class MyApp extends StatelessWidget {
       ],
       builder: (context, child) => MaterialApp(
         debugShowCheckedModeBanner: false,
+        title: 'Railway Ticket Verification',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.blue,
+            brightness: Brightness.light,
+          ),
+          appBarTheme: AppBarTheme(
+            elevation: 2,
+            centerTitle: true,
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            iconTheme: const IconThemeData(color: Colors.white),
+          ),
+          scaffoldBackgroundColor: Colors.grey[50],
+          cardTheme: CardThemeData(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
         home: Consumer<AuthController>(
           builder: (context, authController, _) {
             return authController.isAuthorized
-                ? const HomeScreen()
-                : LogoScreen();
+                ? const CustomBottomNavBar()
+                : const LogoScreen();
           },
         ),
       ),

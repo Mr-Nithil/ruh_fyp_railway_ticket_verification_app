@@ -7,6 +7,11 @@ class AuthController extends ChangeNotifier {
   bool _isAuthorized = false;
   bool get isAuthorized => _isAuthorized;
 
+  AuthController() {
+    // Check authorization status when controller is created
+    checkAuthorization();
+  }
+
   Future<void> login(String email, String password) async {
     try {
       await _authRepository.login(email, password);
@@ -17,9 +22,15 @@ class AuthController extends ChangeNotifier {
     }
   }
 
-  Future<void> signup(String email, String password) async {
+  Future<void> signup(
+    String email,
+    String password,
+    String name,
+    String nic,
+    String checkerId,
+  ) async {
     try {
-      await _authRepository.signup(email, password);
+      await _authRepository.signup(email, password, name, nic, checkerId);
       _isAuthorized = true;
       notifyListeners();
     } catch (e) {

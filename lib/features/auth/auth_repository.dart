@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/services/firestore_service.dart';
 
 class AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirestoreService _firestoreService = FirestoreService();
 
   // Constructor to configure Firebase Auth settings
   AuthRepository() {
@@ -56,12 +58,34 @@ class AuthRepository {
     }
   }
 
-  Future<void> signup(String email, String password) async {
+  Future<void> signup(
+    String email,
+    String password,
+    String name,
+    String nic,
+    String checkerId,
+  ) async {
     try {
-      await _firebaseAuth.createUserWithEmailAndPassword(
+      // Create user in Firebase Auth
+      final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
         email: email.trim(),
         password: password.trim(),
       );
+
+      // Get the user ID
+      final uid = userCredential.user!.uid;
+
+      // Store user details in Firestore
+      await _firestoreService.createUserDocument(
+        uid: uid,
+        name: name.trim(),
+        email: email.trim(),
+        nic: nic.trim().toUpperCase(),
+        checkerId: checkerId.trim(),
+      );
+
+      // Optional: Update Firebase Auth display name
+      await userCredential.user!.updateDisplayName(name.trim());
     } on FirebaseAuthException catch (e) {
       switch (e.code) {
         case 'email-already-in-use':
@@ -86,5 +110,19 @@ class AuthRepository {
 
   Future<void> logout() async {
     await _firebaseAuth.signOut();
+  }
+
+  // Add method to get current user data
+  Future<Map<String, dynamic>?> getCurrentUserData() async {
+    try {
+      final user = _firebaseAuth.currentUser;
+      if (user != null) {
+        final userData = await _firestoreService.getUserDocument(user.uid);
+        return userData?.toMap();
+      }
+      return null;
+    } catch (e) {
+      throw Exception('Failed to get user data: $e');
+    }
   }
 }
