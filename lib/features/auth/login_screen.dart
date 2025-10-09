@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/auth_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/controller/auth_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/register_screen.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/custom_bottom_nav_bar.dart';
 
@@ -43,6 +43,21 @@ class _LoginScreenState extends State<LoginScreen> {
       // Get the AuthController from Provider
       final authController = context.read<AuthController>();
       await authController.login(email, password);
+
+      if (authController.isEmailVerified() == false) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please verify your email before logging in.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
 
       if (mounted) {
         // Navigate to home screen

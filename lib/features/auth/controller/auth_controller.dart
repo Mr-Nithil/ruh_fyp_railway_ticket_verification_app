@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/auth_repository.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/repository/auth_repository.dart';
 
 class AuthController extends ChangeNotifier {
   final AuthRepository _authRepository = AuthRepository();
@@ -51,5 +51,9 @@ class AuthController extends ChangeNotifier {
   void checkAuthorization() {
     _isAuthorized = _authRepository.isAuthorized();
     notifyListeners();
+  }
+
+  bool isEmailVerified() {
+    return _authRepository.isEmailVerified();
   }
 }

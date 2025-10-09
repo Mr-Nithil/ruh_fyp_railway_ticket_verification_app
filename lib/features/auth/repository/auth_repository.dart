@@ -32,6 +32,11 @@ class AuthRepository {
     }
   }
 
+  bool isEmailVerified() {
+    final user = _firebaseAuth.currentUser;
+    return user?.emailVerified ?? false;
+  }
+
   Future<void> login(String email, String password) async {
     try {
       await _firebaseAuth.signInWithEmailAndPassword(
@@ -71,6 +76,9 @@ class AuthRepository {
         email: email.trim(),
         password: password.trim(),
       );
+
+      // send email verification
+      await userCredential.user!.sendEmailVerification();
 
       // Get the user ID
       final uid = userCredential.user!.uid;

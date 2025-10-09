@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/auth_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/controller/auth_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/custom_bottom_nav_bar.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -59,13 +60,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         // Navigate to home screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const CustomBottomNavBar()),
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
         );
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful!'),
+            content: Text('Registration successful! Please verify your email.'),
             backgroundColor: Colors.green,
           ),
         );

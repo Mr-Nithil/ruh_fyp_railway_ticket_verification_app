@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/auth_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/controller/auth_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/login_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -152,59 +152,59 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 28),
 
-            // Account Settings Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Account',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildSettingCard(
-                    icon: Icons.person_outline,
-                    title: 'Account Settings',
-                    subtitle: 'Manage your account details',
-                    gradientColors: [
-                      Colors.green.shade400,
-                      Colors.green.shade600,
-                    ],
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Account settings coming soon!'),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSettingCard(
-                    icon: Icons.lock_outline,
-                    title: 'Privacy & Security',
-                    subtitle: 'Control your privacy settings',
-                    gradientColors: [
-                      Colors.green.shade400,
-                      Colors.green.shade600,
-                    ],
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Privacy settings coming soon!'),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
+            // // Account Settings Section
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 20),
+            //   child: Column(
+            //     crossAxisAlignment: CrossAxisAlignment.start,
+            //     children: [
+            //       const Text(
+            //         'Account',
+            //         style: TextStyle(
+            //           fontSize: 20,
+            //           fontWeight: FontWeight.w700,
+            //           color: Colors.black87,
+            //           letterSpacing: 0.2,
+            //         ),
+            //       ),
+            //       const SizedBox(height: 16),
+            //       _buildSettingCard(
+            //         icon: Icons.person_outline,
+            //         title: 'Account Settings',
+            //         subtitle: 'Manage your account details',
+            //         gradientColors: [
+            //           Colors.green.shade400,
+            //           Colors.green.shade600,
+            //         ],
+            //         onTap: () {
+            //           ScaffoldMessenger.of(context).showSnackBar(
+            //             const SnackBar(
+            //               content: Text('Account settings coming soon!'),
+            //             ),
+            //           );
+            //         },
+            //       ),
+            //       const SizedBox(height: 12),
+            //       _buildSettingCard(
+            //         icon: Icons.lock_outline,
+            //         title: 'Privacy & Security',
+            //         subtitle: 'Control your privacy settings',
+            //         gradientColors: [
+            //           Colors.green.shade400,
+            //           Colors.green.shade600,
+            //         ],
+            //         onTap: () {
+            //           ScaffoldMessenger.of(context).showSnackBar(
+            //             const SnackBar(
+            //               content: Text('Privacy settings coming soon!'),
+            //             ),
+            //           );
+            //         },
+            //       ),
+            //     ],
+            //   ),
+            // ),
+            // const SizedBox(height: 28),
 
             // App Settings Section
             Padding(

@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/services/firestore_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/profile/edit_profile_screen.dart';
 import 'package:shimmer/shimmer.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  // Key to force refresh
+  Key _refreshKey = UniqueKey();
+
+  void _refreshProfile() {
+    setState(() {
+      _refreshKey = UniqueKey();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      key: _refreshKey,
       color: Colors.grey[50],
       child: FutureBuilder<Map<String, dynamic>?>(
         future: FirestoreService().getUserData(),
@@ -204,27 +220,42 @@ class ProfileScreen extends StatelessWidget {
                         icon: Icons.edit_outlined,
                         title: 'Edit Profile',
                         subtitle: 'Update your personal information',
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Edit profile coming soon!'),
-                            ),
-                          );
+                        onTap: () async {
+                          if (userData != null) {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditProfileScreen(userData: userData),
+                              ),
+                            );
+                            // Refresh profile if update was successful
+                            if (result == true) {
+                              _refreshProfile();
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Unable to load user data'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
                         },
                       ),
-                      const SizedBox(height: 12),
-                      _buildActionCard(
-                        icon: Icons.history_outlined,
-                        title: 'Activity History',
-                        subtitle: 'View your verification history',
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Activity history coming soon!'),
-                            ),
-                          );
-                        },
-                      ),
+                      // const SizedBox(height: 12),
+                      // _buildActionCard(
+                      //   icon: Icons.history_outlined,
+                      //   title: 'Activity History',
+                      //   subtitle: 'View your verification history',
+                      //   onTap: () {
+                      //     ScaffoldMessenger.of(context).showSnackBar(
+                      //       const SnackBar(
+                      //         content: Text('Activity history coming soon!'),
+                      //       ),
+                      //     );
+                      //   },
+                      // ),
                     ],
                   ),
                 ),
