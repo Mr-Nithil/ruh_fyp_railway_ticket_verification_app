@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_result_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/services/firestore_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/services/permission_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_scanner_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -12,6 +15,130 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final Future<Map<String, dynamic>?> userData = FirestoreService()
       .getUserData();
+  final PermissionService _permissionService = PermissionService();
+
+  Future<void> _handleVerifyTicket() async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+        ),
+      ),
+    );
+
+    // Check and request camera permission
+    final hasPermission = await _permissionService
+        .checkAndRequestCameraPermission();
+
+    // Close loading dialog
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+
+    if (hasPermission) {
+      // Permission granted, open scanner
+      if (mounted) {
+        // Sample ticket data for testing
+        const sampleTicketData = '''
+{
+  "reference": "BK202510074245",
+  "train": {
+    "number": "1002",
+    "name": "Podi Menike"
+  },
+  "journey": {
+    "from": "Colombo Fort",
+    "to": "Kandy",
+    "date": "2025-10-08",
+    "departure": "08:47",
+    "arrival": "11:55"
+  },
+  "passengers": [
+    {
+      "name": "Ryan Perera (Primary)",
+      "gender": "Male",
+      "seat": "1A01",
+      "idType": "NIC",
+      "idNumber": "222222222222"
+    },
+    {
+      "name": "Ryan Small Perera (Dependent)",
+      "gender": "Male",
+      "seat": "1A02",
+      "idType": "-",
+      "idNumber": "-"
+    },
+    {
+      "name": "Ryan Wife Perera",
+      "gender": "Female",
+      "seat": "1A03",
+      "idType": "NIC",
+      "idNumber": "7686456563"
+    }
+  ],
+  "booking": {
+    "date": "2025-10-07 01:49",
+    "total": "Rs: 5000"
+  },
+  "modelResult": {
+    "isFraud": "True",
+    "fraudReason": "More than 5 Tickets in consecutive Intervals."
+  }
+}
+''';
+
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) =>
+                const QRResultScreen(qrData: sampleTicketData),
+          ),
+        );
+      }
+    } else {
+      // Permission denied
+      if (mounted) {
+        _showPermissionDeniedDialog();
+      }
+    }
+  }
+
+  void _showPermissionDeniedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.camera_alt_outlined, color: Colors.orange),
+            SizedBox(width: 10),
+            Text('Camera Permission Required'),
+          ],
+        ),
+        content: const Text(
+          'Camera access is required to scan QR codes. Please grant camera permission in app settings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _permissionService.openSettings();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,13 +307,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildFeatureButton(
                         icon: Icons.qr_code_scanner,
                         label: 'Scan Ticket',
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Scan ticket coming soon!'),
-                            ),
-                          );
-                        },
+                        onTap: _handleVerifyTicket,
                       ),
                       _buildFeatureButton(
                         icon: Icons.verified_user,
