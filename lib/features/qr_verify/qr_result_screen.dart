@@ -1,29 +1,120 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/qr_data_model.dart';
+import 'package:postgres/postgres.dart';
+import 'package:provider/provider.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/controller/transaction_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
 
-class QRResultScreen extends StatelessWidget {
+class QRResultScreen extends StatefulWidget {
   final String qrData;
 
   const QRResultScreen({super.key, required this.qrData});
 
   @override
-  Widget build(BuildContext context) {
-    TicketData? ticket;
-    String? errorMessage;
+  State<QRResultScreen> createState() => _QRResultScreenState();
+}
 
-    // Try to parse the QR data
+class _QRResultScreenState extends State<QRResultScreen> {
+  bool _isLoading = true;
+  BookingDetails? _bookingDetails;
+  String? _errorMessage;
+  bool _suspicionDetected = false;
+  String _bookingId = '';
+  String _bookingRef = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Schedule the loading after the first frame to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _decodeQRData(widget.qrData);
+      _loadBookingDetails();
+    });
+  }
+
+  void _decodeQRData(String qrData) {
     try {
-      final jsonData = json.decode(qrData);
-      ticket = TicketData.fromJson(jsonData);
-    } catch (e) {
-      errorMessage = 'Invalid ticket data';
-    }
+      // Decode base64 string
+      final decodedBytes = base64Decode(qrData);
+      final decodedString = utf8.decode(decodedBytes);
 
+      // Split by pipe separator
+      final parts = decodedString.split('|').map((e) => e.trim()).toList();
+
+      if (parts.length >= 2) {
+        setState(() {
+          _bookingId = parts[0].trim();
+          print('Booking ID: $_bookingId');
+          _bookingRef = parts[1].trim();
+          print('Booking Reference: $_bookingRef');
+        });
+      } else {
+        // If format is unexpected, log error
+        debugPrint('Unexpected QR data format: $decodedString');
+      }
+    } catch (e) {
+      // Handle decode errors
+      debugPrint('Error decoding QR data: $e');
+      setState(() {
+        _errorMessage = 'Invalid QR code format';
+      });
+    }
+  }
+
+  String _formatDate(String? dateStr) {
+    if (dateStr == null) return 'N/A';
+
+    try {
+      final date = DateTime.parse(dateStr);
+      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  String _formatTime(Time? time) {
+    if (time == null) return 'N/A';
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
+  }
+
+  Future<void> _loadBookingDetails() async {
+    if (!mounted) return;
+
+    final transactionController = Provider.of<TransactionController>(
+      context,
+      listen: false,
+    );
+
+    try {
+      // Use the decoded booking ID for fetching details
+      await transactionController.fetchBookingDetails(_bookingId);
+
+      if (!mounted) return;
+
+      setState(() {
+        _bookingDetails = transactionController.bookingDetails;
+        _isLoading = false;
+
+        // Check for suspicion (you can add your fraud detection logic here)
+        _suspicionDetected = true; // Set based on your fraud detection logic
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _errorMessage = 'Invalid ticket data or booking not found';
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Determine colors based on fraud status
-    final bool isFraud = ticket?.isFraudulent ?? false;
-    final Color statusColor = isFraud ? Colors.red : Colors.green;
-    final Color statusColorDark = isFraud
+    final Color statusColor = _suspicionDetected ? Colors.red : Colors.green;
+    final Color statusColorDark = _suspicionDetected
         ? Colors.red.shade700
         : Colors.green.shade700;
 
@@ -31,18 +122,49 @@ class QRResultScreen extends StatelessWidget {
       top: false,
       child: Scaffold(
         backgroundColor: Colors.grey[50],
-        appBar: AppBar(
-          // title: const Text(
-          //   'Ticket Verification',
-          //   style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.5),
-          // ),
-          backgroundColor: statusColorDark,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-        body: errorMessage != null
-            ? _buildErrorView(errorMessage)
-            : _buildTicketView(context, ticket!, statusColor, statusColorDark),
+        // appBar: AppBar(
+        //   backgroundColor: statusColorDark,
+        //   foregroundColor: Colors.white,
+        //   elevation: 0,
+        //   //automaticallyImplyLeading: false,
+        // ),
+        body: _isLoading
+            ? _buildLoadingView()
+            : _errorMessage != null
+            ? _buildErrorView(_errorMessage!)
+            : _buildTicketView(
+                context,
+                _bookingDetails!,
+                statusColor,
+                statusColorDark,
+              ),
+      ),
+    );
+  }
+
+  Widget _buildLoadingView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.green.shade700),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Verifying Ticket...',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Please wait while we fetch booking details',
+            style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+          ),
+        ],
       ),
     );
   }
@@ -72,7 +194,9 @@ class QRResultScreen extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             ElevatedButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
               icon: const Icon(Icons.qr_code_scanner),
               label: const Text('Scan Again'),
               style: ElevatedButton.styleFrom(
@@ -95,7 +219,7 @@ class QRResultScreen extends StatelessWidget {
 
   Widget _buildTicketView(
     BuildContext context,
-    TicketData ticket,
+    BookingDetails booking,
     Color statusColor,
     Color statusColorDark,
   ) {
@@ -103,7 +227,7 @@ class QRResultScreen extends StatelessWidget {
       child: Column(
         children: [
           // Status Header Section
-          _buildStatusHeader(ticket, statusColor, statusColorDark),
+          _buildStatusHeader(booking, statusColor, statusColorDark),
 
           const SizedBox(height: 28),
 
@@ -126,7 +250,7 @@ class QRResultScreen extends StatelessWidget {
                 _buildModernInfoCard(
                   icon: Icons.confirmation_number_outlined,
                   label: 'Reference Number',
-                  value: ticket.reference,
+                  value: _bookingRef,
                   gradientColors: [Colors.blue.shade400, Colors.blue.shade600],
                 ),
               ],
@@ -152,19 +276,9 @@ class QRResultScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 _buildModernInfoCard(
-                  icon: Icons.train_outlined,
-                  label: 'Train',
-                  value: ticket.train.formattedInfo,
-                  gradientColors: [
-                    Colors.green.shade400,
-                    Colors.green.shade600,
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _buildModernInfoCard(
                   icon: Icons.location_on_outlined,
                   label: 'Route',
-                  value: ticket.journey.route,
+                  value: booking.routeInfo,
                   gradientColors: [
                     Colors.green.shade400,
                     Colors.green.shade600,
@@ -173,8 +287,8 @@ class QRResultScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildModernInfoCard(
                   icon: Icons.calendar_today_outlined,
-                  label: 'Date',
-                  value: ticket.journey.date,
+                  label: 'Travel Date',
+                  value: _formatDate(booking.travelDate),
                   gradientColors: [
                     Colors.green.shade400,
                     Colors.green.shade600,
@@ -183,9 +297,20 @@ class QRResultScreen extends StatelessWidget {
                 const SizedBox(height: 12),
                 _buildModernInfoCard(
                   icon: Icons.access_time_outlined,
-                  label: 'Departure - Arrival',
+                  label: 'Departure',
                   value:
-                      '${ticket.journey.departure} - ${ticket.journey.arrival}',
+                      '${_formatTime(booking.schedule.departureTime)} (${booking.schedule.route!.fromStationName})',
+                  gradientColors: [
+                    Colors.green.shade400,
+                    Colors.green.shade600,
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _buildModernInfoCard(
+                  icon: Icons.access_time_outlined,
+                  label: 'Arrival',
+                  value:
+                      '${_formatTime(booking.schedule.arrivalTime)} (${booking.schedule.route!.toStationName})',
                   gradientColors: [
                     Colors.green.shade400,
                     Colors.green.shade600,
@@ -225,7 +350,7 @@ class QRResultScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '${ticket.passengerCount}',
+                        '${booking.passengerCount}',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -236,7 +361,7 @@ class QRResultScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                ...ticket.passengers.map((passenger) {
+                ...booking.passengers.map((passenger) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: _buildPassengerCard(passenger),
@@ -267,7 +392,7 @@ class QRResultScreen extends StatelessWidget {
                 _buildModernInfoCard(
                   icon: Icons.payment_outlined,
                   label: 'Total Amount',
-                  value: ticket.booking.total,
+                  value: booking.formattedAmount,
                   gradientColors: [
                     Colors.orange.shade400,
                     Colors.orange.shade600,
@@ -277,12 +402,36 @@ class QRResultScreen extends StatelessWidget {
                 _buildModernInfoCard(
                   icon: Icons.event_outlined,
                   label: 'Booked On',
-                  value: ticket.booking.date,
+                  value: _formatDate(booking.bookingDate),
                   gradientColors: [
                     Colors.orange.shade400,
                     Colors.orange.shade600,
                   ],
                 ),
+                if (booking.contactEmail != null) ...[
+                  const SizedBox(height: 12),
+                  _buildModernInfoCard(
+                    icon: Icons.email_outlined,
+                    label: 'Contact Email',
+                    value: booking.contactEmail!,
+                    gradientColors: [
+                      Colors.orange.shade400,
+                      Colors.orange.shade600,
+                    ],
+                  ),
+                ],
+                if (booking.contactPhone != null) ...[
+                  const SizedBox(height: 12),
+                  _buildModernInfoCard(
+                    icon: Icons.phone_outlined,
+                    label: 'Contact Phone',
+                    value: booking.contactPhone!,
+                    gradientColors: [
+                      Colors.orange.shade400,
+                      Colors.orange.shade600,
+                    ],
+                  ),
+                ],
               ],
             ),
           ),
@@ -294,47 +443,48 @@ class QRResultScreen extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-                if (ticket.isFraudulent)
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      _showConfirmationDialog(context, ticket);
-                    },
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Flag Ticket'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                // if (!_suspicionDetected)
+                ElevatedButton.icon(
+                  onPressed: () {
+                    _showConfirmationDialog(context, booking);
+                  },
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Approve Ticket'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                if (!ticket.isFraudulent)
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      _showConfirmationDialog(context, ticket);
-                    },
-                    icon: const Icon(Icons.check_circle_outline),
-                    label: const Text('Approve Ticket'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade700,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                ),
+                const SizedBox(height: 12),
+                // if (_suspicionDetected)
+                ElevatedButton.icon(
+                  onPressed: () {
+                    _showConfirmationDialog(context, booking);
+                  },
+                  icon: const Icon(Icons.flag_outlined),
+                  label: const Text('Flag Ticket'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  icon: const Icon(Icons.qr_code_scanner),
-                  label: const Text('Scan Another'),
+                  icon: const Icon(Icons.home_outlined),
+                  label: const Text('Back to Home'),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     minimumSize: const Size(double.infinity, 50),
@@ -355,7 +505,7 @@ class QRResultScreen extends StatelessWidget {
   }
 
   Widget _buildStatusHeader(
-    TicketData ticket,
+    BookingDetails booking,
     Color statusColor,
     Color statusColorDark,
   ) {
@@ -371,6 +521,7 @@ class QRResultScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
       child: Column(
         children: [
+          const SizedBox(height: 90),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -385,7 +536,7 @@ class QRResultScreen extends StatelessWidget {
               ],
             ),
             child: Icon(
-              ticket.isFraudulent
+              _suspicionDetected
                   ? Icons.error_outline
                   : Icons.verified_outlined,
               size: 60,
@@ -394,7 +545,7 @@ class QRResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            ticket.isFraudulent ? 'SUSPICION DETECTED' : 'VALID TICKET',
+            _suspicionDetected ? 'SUSPICION DETECTED' : 'VALID TICKET',
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w800,
@@ -404,7 +555,7 @@ class QRResultScreen extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
-          if (!ticket.isFraudulent)
+          if (!_suspicionDetected)
             Text(
               'Please confirm the ticket details and passenger identification before approval.',
               style: TextStyle(
@@ -415,7 +566,7 @@ class QRResultScreen extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-          if (ticket.isFraudulent)
+          if (_suspicionDetected)
             Text(
               'Please review the ticket details and passenger identification carefully.',
               style: TextStyle(
@@ -496,7 +647,7 @@ class QRResultScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildPassengerCard(Passenger passenger) {
+  Widget _buildPassengerCard(PassengerDetails passenger) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -542,7 +693,7 @@ class QRResultScreen extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            passenger.cleanName,
+                            passenger.passengerName,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -598,7 +749,16 @@ class QRResultScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${passenger.gender} • Seat: ${passenger.seat}',
+                      '${passenger.gender ?? 'N/A'}   •   Age: ${passenger.age ?? 'N/A'}   •   Seat: ${passenger.seatNumber ?? 'N/A'}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${passenger.trainClass.displayName}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -610,7 +770,7 @@ class QRResultScreen extends StatelessWidget {
               ),
             ],
           ),
-          if (passenger.hasId) ...[
+          if (passenger.hasValidId) ...[
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
@@ -620,12 +780,12 @@ class QRResultScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.badge_outlined, size: 16, color: Colors.grey[700]),
+                  Icon(Icons.badge_outlined, size: 18, color: Colors.grey[700]),
                   const SizedBox(width: 8),
                   Text(
                     '${passenger.idType}: ${passenger.idNumber}',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 15,
                       fontWeight: FontWeight.w500,
                       color: Colors.grey[700],
                       fontFamily: 'monospace',
@@ -640,28 +800,38 @@ class QRResultScreen extends StatelessWidget {
     );
   }
 
-  void _showConfirmationDialog(BuildContext context, TicketData ticket) {
+  void _showConfirmationDialog(BuildContext context, BookingDetails booking) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.check_circle_outline, color: Colors.green),
-            SizedBox(width: 10),
-            Text('Confirm Approval'),
+            Icon(
+              _suspicionDetected
+                  ? Icons.flag_outlined
+                  : Icons.check_circle_outline,
+              color: _suspicionDetected ? Colors.red : Colors.green,
+            ),
+            const SizedBox(width: 10),
+            Text(_suspicionDetected ? 'Flag Ticket' : 'Confirm Approval'),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Are you sure you want to approve this ticket?'),
+            Text(
+              _suspicionDetected
+                  ? 'Are you sure you want to flag this ticket as suspicious?'
+                  : 'Are you sure you want to approve this ticket?',
+            ),
             const SizedBox(height: 12),
             Text(
-              'Reference: ${ticket.reference}',
+              'Reference: ${booking.bookingId}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            Text('Passengers: ${ticket.passengerCount}'),
+            Text('Passengers: ${booking.passengerCount}'),
+            if (booking.routeInfo != 'N/A') Text('Route: ${booking.routeInfo}'),
           ],
         ),
         actions: [
@@ -676,10 +846,12 @@ class QRResultScreen extends StatelessWidget {
               // Here you can add logic to save verification record
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green.shade700,
+              backgroundColor: _suspicionDetected
+                  ? Colors.red.shade700
+                  : Colors.green.shade700,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Approve'),
+            child: Text(_suspicionDetected ? 'Flag' : 'Approve'),
           ),
         ],
       ),

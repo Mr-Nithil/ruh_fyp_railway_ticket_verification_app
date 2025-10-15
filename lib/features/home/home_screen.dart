@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_result_screen.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/repository/transaction_repository.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/services/postgres_db_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/services/firestore_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/services/permission_service.dart';
@@ -41,60 +44,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (hasPermission) {
       // Permission granted, open scanner
       if (mounted) {
-        // Sample ticket data for testing
-        const sampleTicketData = '''
-{
-  "reference": "BK202510074245",
-  "train": {
-    "number": "1002",
-    "name": "Podi Menike"
-  },
-  "journey": {
-    "from": "Colombo Fort",
-    "to": "Kandy",
-    "date": "2025-10-08",
-    "departure": "08:47",
-    "arrival": "11:55"
-  },
-  "passengers": [
-    {
-      "name": "Ryan Perera (Primary)",
-      "gender": "Male",
-      "seat": "1A01",
-      "idType": "NIC",
-      "idNumber": "222222222222"
-    },
-    {
-      "name": "Ryan Small Perera (Dependent)",
-      "gender": "Male",
-      "seat": "1A02",
-      "idType": "-",
-      "idNumber": "-"
-    },
-    {
-      "name": "Ryan Wife Perera",
-      "gender": "Female",
-      "seat": "1A03",
-      "idType": "NIC",
-      "idNumber": "7686456563"
-    }
-  ],
-  "booking": {
-    "date": "2025-10-07 01:49",
-    "total": "Rs: 5000"
-  },
-  "modelResult": {
-    "isFraud": "True",
-    "fraudReason": "More than 5 Tickets in consecutive Intervals."
-  }
-}
-''';
-
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) =>
-                const QRResultScreen(qrData: sampleTicketData),
-          ),
+          MaterialPageRoute(builder: (context) => const QRScannerScreen()),
         );
       }
     } else {
@@ -313,9 +264,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: Icons.verified_user,
                         label: 'Verify',
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Verify ticket coming soon!'),
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const QRResultScreen(
+                                qrData:
+                                    'MDE5OWU0M2UtOTRkYS03MWE1LWFiMTEtMDlmYWQwYzhlZDFlIHwgQksyMDI1MTAxNTc3MDI=',
+                              ),
                             ),
                           );
                         },

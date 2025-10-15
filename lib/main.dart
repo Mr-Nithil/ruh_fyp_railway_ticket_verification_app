@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/custom_bottom_nav_bar.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/controller/auth_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/controller/transaction_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/logo_screen.dart';
 
 void main() async {
@@ -21,6 +22,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => AuthController()),
+        ChangeNotifierProvider(create: (context) => TransactionController()),
       ],
       builder: (context, child) => MaterialApp(
         debugShowCheckedModeBanner: false,
