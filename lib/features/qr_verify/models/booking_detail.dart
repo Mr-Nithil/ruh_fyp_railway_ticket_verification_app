@@ -55,12 +55,14 @@ class BookingDetails {
 /// Schedule details from RW_SET_Schedule table
 class ScheduleDetails {
   final String? scheduleId;
+  final String? trainName;
   final Time? departureTime;
   final Time? arrivalTime;
   final RouteDetails? route;
 
   ScheduleDetails({
     this.scheduleId,
+    this.trainName,
     this.departureTime,
     this.arrivalTime,
     this.route,

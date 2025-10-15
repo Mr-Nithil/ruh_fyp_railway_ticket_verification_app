@@ -276,6 +276,16 @@ class _QRResultScreenState extends State<QRResultScreen> {
                 ),
                 const SizedBox(height: 16),
                 _buildModernInfoCard(
+                  icon: Icons.train_outlined,
+                  label: 'Train',
+                  value: booking.schedule.trainName ?? 'N/A',
+                  gradientColors: [
+                    Colors.green.shade400,
+                    Colors.green.shade600,
+                  ],
+                ),
+                const SizedBox(height: 16),
+                _buildModernInfoCard(
                   icon: Icons.location_on_outlined,
                   label: 'Route',
                   value: booking.routeInfo,

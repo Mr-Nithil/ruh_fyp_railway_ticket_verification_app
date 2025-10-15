@@ -16,17 +16,19 @@ class PermissionService {
   /// Check and request camera permission
   /// Returns true if granted, false otherwise
   Future<bool> checkAndRequestCameraPermission() async {
-    // Check if already granted
-    if (await isCameraPermissionGranted()) {
+    final status = await Permission.camera.status;
+
+    // If permission is not determined yet (first time), request it
+    if (status.isGranted) {
       return true;
     }
 
-    // Request permission
-    final status = await requestCameraPermission();
+    // Request permission - this will show the iOS dialog on first request
+    final result = await Permission.camera.request();
 
-    if (status.isGranted) {
+    if (result.isGranted) {
       return true;
-    } else if (status.isPermanentlyDenied) {
+    } else if (result.isPermanentlyDenied) {
       // Open app settings if permanently denied
       await openAppSettings();
       return false;

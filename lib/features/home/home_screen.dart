@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_result_screen.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/repository/transaction_repository.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/services/postgres_db_service.dart';
@@ -19,27 +20,64 @@ class _HomeScreenState extends State<HomeScreen> {
   final Future<Map<String, dynamic>?> userData = FirestoreService()
       .getUserData();
   final PermissionService _permissionService = PermissionService();
+  bool _permissionChecked = false;
 
-  Future<void> _handleVerifyTicket() async {
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+  @override
+  void initState() {
+    super.initState();
+    _checkCameraPermissionOnLoad();
+  }
+
+  Future<void> _checkCameraPermissionOnLoad() async {
+    // Get current permission status WITHOUT requesting
+    final status = await Permission.camera.status;
+
+    // Only show dialog if permission was explicitly denied or permanently denied
+    // Don't show on first visit (when status is undetermined/notAsked)
+    if (status.isDenied || status.isPermanentlyDenied) {
+      if (mounted) {
+        _showPermissionInfoBanner();
+      }
+    }
+
+    setState(() {
+      _permissionChecked = true;
+    });
+  }
+
+  void _showPermissionInfoBanner() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Camera permission required for ticket scanning',
+                style: TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.orange.shade700,
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Enable',
+          textColor: Colors.white,
+          onPressed: () {
+            _permissionService.openSettings();
+          },
         ),
       ),
     );
+  }
 
-    // Check and request camera permission
+  Future<void> _handleVerifyTicket() async {
+    // Check and request camera permission WITHOUT showing loading dialog
+    // This allows the system permission dialog to appear
     final hasPermission = await _permissionService
         .checkAndRequestCameraPermission();
-
-    // Close loading dialog
-    if (mounted) {
-      Navigator.of(context).pop();
-    }
 
     if (hasPermission) {
       // Permission granted, open scanner
@@ -49,9 +87,28 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } else {
-      // Permission denied
+      // Permission denied - check if permanently denied
+      final status = await Permission.camera.status;
+
       if (mounted) {
-        _showPermissionDeniedDialog();
+        if (status.isPermanentlyDenied) {
+          _showPermissionDeniedDialog();
+        } else if (status.isDenied) {
+          // User just denied - show a snackbar instead of full dialog
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Camera permission is required to scan tickets',
+              ),
+              action: SnackBarAction(
+                label: 'Grant',
+                onPressed: () {
+                  _handleVerifyTicket(); // Try again
+                },
+              ),
+            ),
+          );
+        }
       }
     }
   }
