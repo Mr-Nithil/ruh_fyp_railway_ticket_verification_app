@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/train_schedule.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/home/models/train_schedule.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/repository/transaction_repository.dart';
 
 class TransactionController extends ChangeNotifier {
@@ -25,10 +25,5 @@ class TransactionController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  Future<List<TrainSchedule>?> fetchTrainSchedules() async {
-    final schedules = await _transactionRepository.fetchTrainSchedule();
-    return schedules;
   }
 }

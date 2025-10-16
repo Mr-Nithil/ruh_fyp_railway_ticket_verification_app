@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:provider/provider.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/core/services/shared_preferences_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/controller/transaction_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
 
@@ -21,6 +22,8 @@ class _QRResultScreenState extends State<QRResultScreen> {
   bool _suspicionDetected = false;
   String _bookingId = '';
   String _bookingRef = '';
+
+  final SharedPreferencesService _prefsService = SharedPreferencesService();
 
   @override
   void initState() {

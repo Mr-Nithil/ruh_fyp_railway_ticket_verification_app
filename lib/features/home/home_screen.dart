@@ -1,13 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_result_screen.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/repository/transaction_repository.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/services/postgres_db_service.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/services/firestore_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/services/permission_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_scanner_screen.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/core/services/shared_preferences_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/home/widgets/train_selection_popup.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -20,12 +18,28 @@ class _HomeScreenState extends State<HomeScreen> {
   final Future<Map<String, dynamic>?> userData = FirestoreService()
       .getUserData();
   final PermissionService _permissionService = PermissionService();
+  final SharedPreferencesService _prefsService = SharedPreferencesService();
   bool _permissionChecked = false;
+  bool _hasSelectedTrain = false;
+  String? _selectedTrainName;
 
   @override
   void initState() {
     super.initState();
     _checkCameraPermissionOnLoad();
+    _loadSelectedTrain();
+  }
+
+  Future<void> _loadSelectedTrain() async {
+    final hasSelected = await _prefsService.hasSelectedSchedule();
+    final trainName = await _prefsService.getSelectedTrainName();
+
+    if (mounted) {
+      setState(() {
+        _hasSelectedTrain = hasSelected;
+        _selectedTrainName = trainName;
+      });
+    }
   }
 
   Future<void> _checkCameraPermissionOnLoad() async {
@@ -74,6 +88,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleVerifyTicket() async {
+    // Check if train is selected
+    if (!_hasSelectedTrain) {
+      _showTrainNotSelectedDialog();
+      return;
+    }
+
     // Check and request camera permission WITHOUT showing loading dialog
     // This allows the system permission dialog to appear
     final hasPermission = await _permissionService
@@ -111,6 +131,53 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     }
+  }
+
+  void _showTrainNotSelectedDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.train, color: Colors.orange),
+            SizedBox(width: 10),
+            Text('Train Not Selected'),
+          ],
+        ),
+        content: const Text(
+          'Please select a train schedule before scanning tickets. Tap the "Select Train" button to choose a train.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showTrainSelectionPopup();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Select Train'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTrainSelectionPopup() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => TrainSelectionPopup(
+        onTrainSelected: () {
+          _loadSelectedTrain();
+        },
+      ),
+    );
   }
 
   void _showPermissionDeniedDialog() {
@@ -283,7 +350,15 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 20),
+
+            // Selected Train Card
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: _buildSelectedTrainCard(),
+            ),
+
+            const SizedBox(height: 20),
 
             // Quick Actions Title
             Padding(
@@ -313,23 +388,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildFeatureButton(
+                        icon: Icons.train,
+                        label: 'Select Train',
+                        onTap: _showTrainSelectionPopup,
+                        //color: Colors.blue,
+                      ),
+                      _buildFeatureButton(
                         icon: Icons.qr_code_scanner,
                         label: 'Scan Ticket',
                         onTap: _handleVerifyTicket,
-                      ),
-                      _buildFeatureButton(
-                        icon: Icons.verified_user,
-                        label: 'Verify',
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => const QRResultScreen(
-                                qrData:
-                                    'MDE5OWU0M2UtOTRkYS03MWE1LWFiMTEtMDlmYWQwYzhlZDFlIHwgQksyMDI1MTAxNTc3MDI=',
-                              ),
-                            ),
-                          );
-                        },
+                        isDisabled: !_hasSelectedTrain,
                       ),
                     ],
                   ),
@@ -364,6 +432,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+            SizedBox(height: 30),
           ],
         ),
       ),
@@ -530,55 +599,152 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Widget _buildSelectedTrainCard() {
+    return GestureDetector(
+      onTap: _showTrainSelectionPopup,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: _hasSelectedTrain
+                ? [Colors.green.shade50, Colors.green.shade100]
+                : [Colors.orange.shade50, Colors.orange.shade100],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _hasSelectedTrain
+                ? Colors.green.shade300
+                : Colors.orange.shade300,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _hasSelectedTrain ? Colors.green : Colors.orange,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                _hasSelectedTrain ? Icons.train : Icons.warning_amber,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _hasSelectedTrain ? 'Selected Train' : 'No Train Selected',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _hasSelectedTrain
+                        ? (_selectedTrainName ?? 'Unknown Train')
+                        : 'Tap to select a train',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: _hasSelectedTrain
+                          ? Colors.green.shade900
+                          : Colors.orange.shade900,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: Colors.grey[400]),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildFeatureButton({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
+    Color? color,
+    bool isDisabled = false,
   }) {
+    // Get gradient colors based on the button color
+    List<Color> getGradientColors() {
+      if (color == Colors.blue) {
+        return [Colors.blue.shade400, Colors.blue.shade600];
+      }
+      return [Colors.green.shade400, Colors.green.shade600];
+    }
+
     return Expanded(
       child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 6),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.06),
-                blurRadius: 15,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Colors.green.shade400, Colors.green.shade600],
+        onTap: isDisabled ? null : onTap,
+        child: Opacity(
+          opacity: isDisabled ? 0.5 : 1.0,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.06),
+                  blurRadius: 15,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: getGradientColors(),
+                    ),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  child: Icon(icon, size: 28, color: Colors.white),
                 ),
-                child: Icon(icon, size: 28, color: Colors.white),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                  height: 1.2,
+                const SizedBox(height: 12),
+                Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                    height: 1.2,
+                  ),
                 ),
-              ),
-            ],
+                // if (isDisabled)
+                //   Padding(
+                //     padding: const EdgeInsets.only(top: 4),
+                //     child: Text(
+                //       'Select train first',
+                //       textAlign: TextAlign.center,
+                //       style: TextStyle(
+                //         fontSize: 10,
+                //         color: Colors.grey[600],
+                //         fontStyle: FontStyle.italic,
+                //       ),
+                //     ),
+                //   ),
+              ],
+            ),
           ),
         ),
       ),

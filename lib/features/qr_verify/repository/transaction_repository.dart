@@ -1,6 +1,6 @@
 import 'package:postgres/postgres.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/train_schedule.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/home/models/train_schedule.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/services/postgres_db_service.dart';
 
 class TransactionRepository {
@@ -246,97 +246,5 @@ class TransactionRepository {
     }
 
     return null;
-  }
-
-  // ...existing code...
-
-  /// Fetches all active train schedules with complete details
-  ///
-  /// This method performs a JOIN query across multiple tables:
-  /// - RW_SET_Schedule (main schedule table)
-  /// - RW_SET_Train (train details)
-  /// - RW_SET_Route (route information)
-  /// - RW_SET_Station (from and to station details)
-  Future<List<TrainSchedule>?> fetchTrainSchedule() async {
-    try {
-      // Connect to database
-      await dbService.connect();
-
-      // Complex query to fetch all active schedules with related data
-      final query = '''
-        SELECT 
-          s."Id" as "ScheduleId",
-          s."TrainId",
-          s."RouteId",
-          s."DepartureTime",
-          s."ArrivalTime",
-          s."isActive",
-          
-          t."TrainName",
-          
-          r."RouteName",
-          r."FromStationId",
-          r."ToStationId",
-          
-          fs."StationName" as "FromStationName",
-          ts."StationName" as "ToStationName"
-          
-        FROM "RW_SET_Schedule" s
-        LEFT JOIN "RW_SET_Train" t ON s."TrainId" = t."Id"
-        LEFT JOIN "RW_SET_Route" r ON s."RouteId" = r."Id"
-        LEFT JOIN "RW_SET_Station" fs ON r."FromStationId" = fs."Id"
-        LEFT JOIN "RW_SET_Station" ts ON r."ToStationId" = ts."Id"
-        WHERE s."isActive" = true
-        ORDER BY s."DepartureTime" ASC;
-      ''';
-
-      // Execute query
-      final result = await dbService.connection.execute(Sql.named(query));
-
-      // Close connection
-      if (dbService.connection.isOpen) {
-        await dbService.close();
-      }
-
-      // Check if any results found
-      if (result.isEmpty) {
-        return [];
-      }
-
-      // Map results to list of TrainSchedule objects
-      return _mapResultsToTrainSchedules(result);
-    } catch (e) {
-      print('❌ Error fetching train schedules: $e');
-      await dbService.close();
-      rethrow;
-    }
-  }
-
-  /// Maps database query results to list of TrainSchedule objects
-  List<TrainSchedule> _mapResultsToTrainSchedules(Result result) {
-    final schedules = <TrainSchedule>[];
-
-    for (final row in result) {
-      final rowMap = row.toColumnMap();
-
-      schedules.add(
-        TrainSchedule(
-          scheduleId: rowMap['ScheduleId']?.toString(),
-          trainId: rowMap['TrainId']?.toString(),
-          trainName: rowMap['TrainName']?.toString(),
-          routeId: rowMap['RouteId']?.toString(),
-          routeName: rowMap['RouteName']?.toString(),
-          fromStationId: rowMap['FromStationId']?.toString(),
-          fromStationName: rowMap['FromStationName']?.toString(),
-          toStationId: rowMap['ToStationId']?.toString(),
-          toStationName: rowMap['ToStationName']?.toString(),
-          departureTime: _parseTime(rowMap['DepartureTime']),
-          arrivalTime: _parseTime(rowMap['ArrivalTime']),
-          isActive: rowMap['isActive'] as bool?,
-        ),
-      );
-    }
-
-    return schedules;
   }
 }
