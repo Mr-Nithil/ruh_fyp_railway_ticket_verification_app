@@ -96,12 +96,15 @@ class _QRResultScreenState extends State<QRResultScreen> {
 
       if (!mounted) return;
 
+      final selectedScheduleId = await _prefsService.getSelectedScheduleId();
+
       setState(() {
         _bookingDetails = transactionController.bookingDetails;
         _isLoading = false;
 
-        if (_bookingDetails!.scheduleId !=
-            _prefsService.getSelectedScheduleId()) {
+        if (_bookingDetails!.scheduleId != selectedScheduleId) {
+          print('Selected Schedule ID: $selectedScheduleId');
+          print('Ticket Schedule ID: ${_bookingDetails!.scheduleId}');
           setState(() {
             _errorMessage = 'Ticket does not match selected train schedule';
             _isLoading = false;
