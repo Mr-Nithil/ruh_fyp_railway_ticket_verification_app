@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/services/firestore_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/services/firestore_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/profile/edit_profile_screen.dart';
 import 'package:shimmer/shimmer.dart';
 

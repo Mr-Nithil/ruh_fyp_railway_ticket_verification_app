@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/custom_bottom_nav_bar.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/controller/auth_controller.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/home/controller/schedule_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/controller/schedule_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/controller/transaction_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/firebase_options.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/logo_screen.dart';

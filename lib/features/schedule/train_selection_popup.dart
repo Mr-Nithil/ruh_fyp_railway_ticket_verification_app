@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/home/controller/schedule_controller.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/home/models/train_schedule.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/core/services/shared_preferences_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/controller/schedule_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/models/train_schedule.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/services/shared_preferences_service.dart';
 
 class TrainSelectionPopup extends StatefulWidget {
   final VoidCallback onTrainSelected;
@@ -186,7 +186,7 @@ class _TrainSelectionPopupState extends State<TrainSelectionPopup> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Error: ${snapshot.error}',
+                              'An error occurred while fetching train schedules. Please try again later.',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 14,

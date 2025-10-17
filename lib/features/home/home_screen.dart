@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/services/firestore_service.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/services/permission_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/services/firestore_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/services/permission_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_scanner_screen.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/core/services/shared_preferences_service.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/home/widgets/train_selection_popup.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/services/shared_preferences_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/train_selection_popup.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -406,12 +406,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildFeatureButton(
-                        icon: Icons.history,
-                        label: 'History',
+                        icon: Icons.list_alt,
+                        label: 'Ticket List',
                         onTap: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('History coming soon!'),
+                              content: Text('Ticket List coming soon!'),
                             ),
                           );
                         },
@@ -730,19 +730,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 1.2,
                   ),
                 ),
-                // if (isDisabled)
-                //   Padding(
-                //     padding: const EdgeInsets.only(top: 4),
-                //     child: Text(
-                //       'Select train first',
-                //       textAlign: TextAlign.center,
-                //       style: TextStyle(
-                //         fontSize: 10,
-                //         color: Colors.grey[600],
-                //         fontStyle: FontStyle.italic,
-                //       ),
-                //     ),
-                //   ),
+                if (isDisabled)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      'Select train first',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey[600],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:provider/provider.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/core/services/shared_preferences_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/services/shared_preferences_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/controller/transaction_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
 
@@ -99,6 +99,15 @@ class _QRResultScreenState extends State<QRResultScreen> {
       setState(() {
         _bookingDetails = transactionController.bookingDetails;
         _isLoading = false;
+
+        if (_bookingDetails!.scheduleId !=
+            _prefsService.getSelectedScheduleId()) {
+          setState(() {
+            _errorMessage = 'Ticket does not match selected train schedule';
+            _isLoading = false;
+            return;
+          });
+        }
 
         // Check for suspicion (you can add your fraud detection logic here)
         _suspicionDetected = true; // Set based on your fraud detection logic
