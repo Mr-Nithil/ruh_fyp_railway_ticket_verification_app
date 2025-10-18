@@ -24,6 +24,7 @@ class TransactionRepository {
       final query = '''
         SELECT 
           b."Id" as "BookingId",
+          b."BookingReference",
           b."ScheduleId",
           b."BookingDate",
           b."TravelDate",
@@ -53,6 +54,19 @@ class TransactionRepository {
           bp."ClassId",
           bp."IsDependent",
           bp."IsPrimary",
+
+          bdi."CheckedBy",
+          bdi."CheckedOn",
+          bdi."CheckerRemark",
+          bdi."IsApproved",
+          bdi."IsChecked",
+          bdi."IsReviewed",
+          bdi."IsFraudConfirmed",
+
+          c."Name" as "CheckerName",
+          c."Email" as "CheckerEmail",
+          c."NicNumber" as "CheckerNic",
+          c."CheckerNumber" as "CheckerNumber",
           
           tc."ClassName"
           
@@ -63,6 +77,8 @@ class TransactionRepository {
         LEFT JOIN "RW_SET_Station" fs ON r."FromStationId" = fs."Id"
         LEFT JOIN "RW_SET_Station" ts ON r."ToStationId" = ts."Id"
         LEFT JOIN "RW_SYS_BookingPassenger" bp ON b."Id" = bp."BookingId"
+        LEFT JOIN "RW_SYS_BookingDetailedInfo" bdi ON b."Id" = bdi."BookingId"
+        LEFT JOIN "RW_SYS_Checker" c ON bdi."CheckedBy" = c."Id"
         LEFT JOIN "RW_SET_TrainClass" tc ON bp."ClassId" = tc."Id"
         WHERE b."Id" = @bookingId
         ORDER BY bp."IsPrimary" DESC NULLS LAST, bp."IsDependent" ASC NULLS LAST;
@@ -154,6 +170,7 @@ class TransactionRepository {
     // Create and return complete BookingDetails
     return BookingDetails(
       bookingId: firstRow['BookingId']?.toString() ?? '',
+      bookingReference: firstRow['BookingReference']?.toString(),
       scheduleId: firstRow['ScheduleId']?.toString(),
       bookingDate: firstRow['BookingDate']?.toString(),
       travelDate: firstRow['TravelDate']?.toString(),
@@ -162,6 +179,21 @@ class TransactionRepository {
       contactPhone: firstRow['ContactPhone']?.toString(),
       schedule: scheduleDetails,
       passengers: passengers,
+      isReviewed: firstRow['IsReviewed'] as bool?,
+      isFraudConfirmed: firstRow['IsFraudConfirmed'] as bool?,
+      checkedOn: _parseTime(firstRow['CheckedOn']),
+      checkerRemark: firstRow['CheckerRemark']?.toString(),
+      isApproved: firstRow['IsApproved'] as bool?,
+      isChecked: firstRow['IsChecked'] as bool?,
+      checker: firstRow['CheckedBy'] != null
+          ? Checker(
+              checkerId: firstRow['CheckedBy']?.toString(),
+              checkerName: firstRow['CheckerName']?.toString(),
+              checkerEmail: firstRow['CheckerEmail']?.toString(),
+              checkerNic: firstRow['CheckerNic']?.toString(),
+              checkerNumber: firstRow['CheckerNumber']?.toString(),
+            )
+          : null,
     );
   }
 

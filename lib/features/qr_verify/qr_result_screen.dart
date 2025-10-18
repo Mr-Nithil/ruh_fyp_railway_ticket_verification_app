@@ -22,6 +22,10 @@ class _QRResultScreenState extends State<QRResultScreen> {
   bool _suspicionDetected = false;
   String _bookingId = '';
   String _bookingRef = '';
+  bool _isCheckedBefore = false;
+  bool _isApprovedTicket = false;
+  Color statusColor = Colors.grey;
+  Color statusColorDark = Colors.grey.shade700;
 
   final SharedPreferencesService _prefsService = SharedPreferencesService();
 
@@ -112,8 +116,18 @@ class _QRResultScreenState extends State<QRResultScreen> {
           });
         }
 
-        // Check for suspicion (you can add your fraud detection logic here)
-        _suspicionDetected = true; // Set based on your fraud detection logic
+        if (transactionController.bookingDetails!.isReviewed == true &&
+            transactionController.bookingDetails!.isFraudConfirmed == true) {
+          _suspicionDetected = true;
+        }
+
+        if (transactionController.bookingDetails!.isChecked == true) {
+          _isCheckedBefore = true;
+        }
+
+        if (transactionController.bookingDetails!.isApproved == true) {
+          _isApprovedTicket = true;
+        }
       });
     } catch (e) {
       if (!mounted) return;
@@ -128,10 +142,18 @@ class _QRResultScreenState extends State<QRResultScreen> {
   @override
   Widget build(BuildContext context) {
     // Determine colors based on fraud status
-    final Color statusColor = _suspicionDetected ? Colors.red : Colors.green;
-    final Color statusColorDark = _suspicionDetected
-        ? Colors.red.shade700
-        : Colors.green.shade700;
+
+    if (_isCheckedBefore) {
+      statusColor = _isApprovedTicket ? Colors.green : Colors.red;
+      statusColorDark = _isApprovedTicket
+          ? Colors.green.shade700
+          : Colors.red.shade700;
+    } else {
+      statusColor = _suspicionDetected ? Colors.red : Colors.green;
+      statusColorDark = _suspicionDetected
+          ? Colors.red.shade700
+          : Colors.green.shade700;
+    }
 
     return SafeArea(
       top: false,
@@ -468,42 +490,44 @@ class _QRResultScreenState extends State<QRResultScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-                // if (!_suspicionDetected)
-                ElevatedButton.icon(
-                  onPressed: () {
-                    _showConfirmationDialog(context, booking);
-                  },
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Approve Ticket'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                if (!_isCheckedBefore)
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      _showConfirmationDialog(context, booking);
+                    },
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Approve Ticket'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      minimumSize: const Size(double.infinity, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
-                ),
                 const SizedBox(height: 12),
-                // if (_suspicionDetected)
-                ElevatedButton.icon(
-                  onPressed: () {
-                    _showConfirmationDialog(context, booking);
-                  },
-                  icon: const Icon(Icons.flag_outlined),
-                  label: const Text('Flag Ticket'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                if (!_isCheckedBefore)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _showConfirmationDialog(context, booking);
+                      },
+                      icon: const Icon(Icons.flag_outlined),
+                      label: const Text('Flag Ticket'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red.shade700,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -546,61 +570,127 @@ class _QRResultScreenState extends State<QRResultScreen> {
       padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
       child: Column(
         children: [
-          const SizedBox(height: 90),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+          if (!_isCheckedBefore)
+            Column(
+              children: [
+                const SizedBox(height: 90),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    _suspicionDetected
+                        ? Icons.error_outline
+                        : Icons.verified_outlined,
+                    size: 60,
+                    color: statusColorDark,
+                  ),
                 ),
+                const SizedBox(height: 20),
+                Text(
+                  _suspicionDetected ? 'SUSPICION DETECTED' : 'VALID TICKET',
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 1.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                if (!_suspicionDetected)
+                  Text(
+                    'Please confirm the ticket details and passenger identification before approval.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(0.95),
+                      letterSpacing: 0.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                if (_suspicionDetected)
+                  Text(
+                    'Please review the ticket details and passenger identification carefully.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(0.95),
+                      letterSpacing: 0.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
               ],
             ),
-            child: Icon(
-              _suspicionDetected
-                  ? Icons.error_outline
-                  : Icons.verified_outlined,
-              size: 60,
-              color: statusColorDark,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            _suspicionDetected ? 'SUSPICION DETECTED' : 'VALID TICKET',
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: Colors.white,
-              letterSpacing: 1.0,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          if (!_suspicionDetected)
-            Text(
-              'Please confirm the ticket details and passenger identification before approval.',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withOpacity(0.95),
-                letterSpacing: 0.3,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          if (_suspicionDetected)
-            Text(
-              'Please review the ticket details and passenger identification carefully.',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withOpacity(0.95),
-                letterSpacing: 0.3,
-              ),
-              textAlign: TextAlign.center,
+          if (_isCheckedBefore)
+            Column(
+              children: [
+                const SizedBox(height: 90),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    _isApprovedTicket
+                        ? Icons.error_outline
+                        : Icons.verified_outlined,
+                    size: 60,
+                    color: statusColorDark,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'ALREADY CHECKED',
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: 1.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                if (_isApprovedTicket)
+                  Text(
+                    'This ticket has already been approved.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(0.95),
+                      letterSpacing: 0.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                if (!_isApprovedTicket)
+                  Text(
+                    'This ticket has already been flagged.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white.withOpacity(0.95),
+                      letterSpacing: 0.3,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+              ],
             ),
         ],
       ),
