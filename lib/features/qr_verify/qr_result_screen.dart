@@ -8,6 +8,8 @@ import 'package:ruh_fyp_railway_ticket_verification_app/services/firestore_servi
 import 'package:ruh_fyp_railway_ticket_verification_app/services/shared_preferences_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/controller/transaction_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/checker_remarks_model.dart';
+import 'package:uuid/uuid.dart';
 
 class QRResultScreen extends StatefulWidget {
   final String qrData;
@@ -325,7 +327,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                 _buildModernInfoCard(
                   icon: Icons.confirmation_number_outlined,
                   label: 'Reference Number',
-                  value: _bookingRef,
+                  value: booking.bookingReference ?? 'N/A',
                   gradientColors: [Colors.blue.shade400, Colors.blue.shade600],
                 ),
               ],
@@ -694,7 +696,11 @@ class _QRResultScreenState extends State<QRResultScreen> {
                 if (!_isCheckedBefore)
                   ElevatedButton.icon(
                     onPressed: () {
-                      _showConfirmationDialog(context, booking);
+                      _showConfirmationDialog(
+                        context,
+                        booking,
+                        isApproval: true,
+                      );
                     },
                     icon: const Icon(Icons.check_circle_outline),
                     label: const Text('Approve Ticket'),
@@ -714,7 +720,11 @@ class _QRResultScreenState extends State<QRResultScreen> {
                     padding: const EdgeInsets.fromLTRB(0, 0, 0, 12),
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        _showConfirmationDialog(context, booking);
+                        _showConfirmationDialog(
+                          context,
+                          booking,
+                          isApproval: false,
+                        );
                       },
                       icon: const Icon(Icons.flag_outlined),
                       label: const Text('Flag Ticket'),
@@ -1116,39 +1126,120 @@ class _QRResultScreenState extends State<QRResultScreen> {
     );
   }
 
-  void _showConfirmationDialog(BuildContext context, BookingDetails booking) {
+  void _showConfirmationDialog(
+    BuildContext context,
+    BookingDetails booking, {
+    required bool isApproval,
+  }) {
+    final TextEditingController remarksController = TextEditingController();
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Icon(
-              _suspicionDetected
-                  ? Icons.flag_outlined
-                  : Icons.check_circle_outline,
-              color: _suspicionDetected ? Colors.red : Colors.green,
+              isApproval ? Icons.check_circle_outline : Icons.flag_outlined,
+              color: isApproval ? Colors.green : Colors.red,
+              size: 28,
             ),
             const SizedBox(width: 10),
-            Text(_suspicionDetected ? 'Flag Ticket' : 'Confirm Approval'),
+            Expanded(
+              child: Text(
+                isApproval ? 'Approve Ticket' : 'Flag Ticket',
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _suspicionDetected
-                  ? 'Are you sure you want to flag this ticket as suspicious?'
-                  : 'Are you sure you want to approve this ticket?',
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isApproval
+                      ? 'Are you sure you want to approve this ticket?'
+                      : 'Are you sure you want to flag this ticket as suspicious?',
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoRow(
+                        'Reference',
+                        booking.bookingReference ?? 'N/A',
+                        Icons.confirmation_number,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoRow(
+                        'Passengers',
+                        booking.passengerCount.toString(),
+                        Icons.people,
+                      ),
+                      if (booking.routeInfo != 'N/A') ...[
+                        const SizedBox(height: 8),
+                        _buildInfoRow('Route', booking.routeInfo, Icons.route),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Checker Remarks (Required)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: remarksController,
+                  maxLines: 4,
+                  decoration: InputDecoration(
+                    hintText: isApproval
+                        ? 'Enter your remarks for approving this ticket...'
+                        : 'Please describe the suspicious activity or reason for flagging...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: isApproval ? Colors.green : Colors.red,
+                        width: 2,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: Colors.grey.shade50,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return isApproval
+                          ? 'Please provide remarks for approval'
+                          : 'Please provide a reason for flagging';
+                    }
+                    return null;
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Reference: ${booking.bookingId}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text('Passengers: ${booking.passengerCount}'),
-            if (booking.routeInfo != 'N/A') Text('Route: ${booking.routeInfo}'),
-          ],
+          ),
         ),
         actions: [
           TextButton(
@@ -1156,21 +1247,180 @@ class _QRResultScreenState extends State<QRResultScreen> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).pop();
-              // Here you can add logic to save verification record
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                Navigator.of(context).pop();
+
+                // Show loading indicator
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => Center(
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                isApproval ? Colors.green : Colors.red,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              isApproval
+                                  ? 'Approving ticket...'
+                                  : 'Flagging ticket...',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+
+                try {
+                  // Get the transaction controller
+                  final transactionController =
+                      Provider.of<TransactionController>(
+                        context,
+                        listen: false,
+                      );
+
+                  // Create CheckerRemarks object
+                  final remarks = CheckerRemarks(
+                    id: const Uuid().v4(),
+                    checkerRemark: remarksController.text.trim(),
+                    isApproved: isApproval,
+                    isChecked: true,
+                    bookingId: booking.bookingId,
+                    checkedBy: _currentUser.postgresId,
+                    checkedOn: DateTime.now(),
+                  );
+
+                  // Update checker remarks
+                  await transactionController.updateCheckerRemarks(
+                    remarks: remarks,
+                  );
+
+                  // Close loading dialog
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+
+                    // Show success message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            Icon(
+                              isApproval ? Icons.check_circle : Icons.flag,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                isApproval
+                                    ? 'Ticket approved successfully!'
+                                    : 'Ticket flagged successfully!',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: isApproval ? Colors.green : Colors.red,
+                        duration: const Duration(seconds: 3),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+
+                    // Go back to home
+                    Navigator.of(context).pop();
+                  }
+                } catch (e) {
+                  // Close loading dialog
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+
+                    // Show error message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Error: ${e.toString()}',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: Colors.red.shade700,
+                        duration: const Duration(seconds: 5),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: _suspicionDetected
-                  ? Colors.red.shade700
-                  : Colors.green.shade700,
+              backgroundColor: isApproval
+                  ? Colors.green.shade700
+                  : Colors.red.shade700,
               foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: Text(_suspicionDetected ? 'Flag' : 'Approve'),
+            child: Text(isApproval ? 'Approve' : 'Flag'),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey[600]),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
     );
   }
 }

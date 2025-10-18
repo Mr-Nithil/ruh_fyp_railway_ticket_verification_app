@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/checker_remarks_model.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/models/train_schedule.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/repository/transaction_repository.dart';
 
@@ -25,5 +26,14 @@ class TransactionController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> updateCheckerRemarks({required CheckerRemarks remarks}) async {
+    await _transactionRepository.updateCheckerRemarks(
+      bookingId: remarks.bookingId,
+      checkedBy: remarks.checkedBy,
+      isApproved: remarks.isApproved,
+      checkerRemark: remarks.checkerRemark,
+    );
   }
 }

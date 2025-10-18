@@ -1,5 +1,6 @@
 import 'package:postgres/postgres.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/checker_remarks_model.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/models/train_schedule.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/postgres_db_service.dart';
 
@@ -278,5 +279,69 @@ class TransactionRepository {
     }
 
     return null;
+  }
+
+  Future<void> updateCheckerRemarks({
+    required String bookingId,
+    required String checkedBy,
+    required String checkerRemark,
+    required bool isApproved,
+  }) async {
+    try {
+      // Connect to database
+      await dbService.connect();
+
+      final query = '''
+        UPDATE public."RW_SYS_BookingDetailedInfo"
+        SET 
+          "CheckedBy" = @checkedBy,
+          "CheckedOn" = @checkedOn,
+          "CheckerRemark" = @checkerRemark,
+          "IsApproved" = @isApproved,
+          "IsChecked" = @isChecked,
+          "UpdatedBy" = @checkedBy,
+          "UpdatedOn" = @updatedOn
+        WHERE "BookingId" = @bookingId
+      ''';
+
+      final result = await dbService.connection.execute(
+        Sql.named(query),
+        parameters: {
+          'bookingId': bookingId,
+          'checkedBy': checkedBy,
+          'checkedOn': DateTime.now().toUtc(),
+          'checkerRemark': checkerRemark,
+          'isApproved': isApproved,
+          'isChecked': true, // Always set to true when updating
+          'updatedOn': DateTime.now().toUtc(),
+        },
+      );
+
+      print('✅ Checker remarks updated successfully for booking: $bookingId');
+      print('   Affected rows: ${result.affectedRows}');
+
+      // Check if any rows were updated
+      if (result.affectedRows == 0) {
+        throw Exception('No booking found with ID: $bookingId');
+      }
+    } catch (e) {
+      print('❌ Error updating checker remarks: $e');
+      rethrow;
+    } finally {
+      // Close connection
+      if (dbService.isConnected) {
+        await dbService.close();
+      }
+    }
+  }
+
+  /// Alternative method using CheckerRemarks model
+  Future<void> updateCheckerRemarksFromModel(CheckerRemarks remarks) async {
+    await updateCheckerRemarks(
+      bookingId: remarks.bookingId,
+      checkedBy: remarks.checkedBy,
+      checkerRemark: remarks.checkerRemark,
+      isApproved: remarks.isApproved,
+    );
   }
 }
