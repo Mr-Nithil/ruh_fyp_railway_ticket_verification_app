@@ -15,6 +15,7 @@ class FirestoreService {
     required String email,
     required String nic,
     required String checkerId,
+    required String postgresId,
   }) async {
     try {
       final userModel = UserModel(
@@ -24,6 +25,7 @@ class FirestoreService {
         nic: nic,
         checkerId: checkerId,
         createdAt: DateTime.now(),
+        postgresId: postgresId,
       );
 
       await _firestore

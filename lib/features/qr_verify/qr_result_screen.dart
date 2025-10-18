@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
 import 'package:provider/provider.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/models/user_model.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/services/firestore_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/shared_preferences_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/controller/transaction_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
@@ -26,6 +29,10 @@ class _QRResultScreenState extends State<QRResultScreen> {
   bool _isApprovedTicket = false;
   Color statusColor = Colors.grey;
   Color statusColorDark = Colors.grey.shade700;
+  late final UserModel _currentUser;
+
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirestoreService _firestoreService = FirestoreService();
 
   final SharedPreferencesService _prefsService = SharedPreferencesService();
 
@@ -36,7 +43,20 @@ class _QRResultScreenState extends State<QRResultScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _decodeQRData(widget.qrData);
       _loadBookingDetails();
+      _loadCurrentUser();
     });
+  }
+
+  void _loadCurrentUser() async {
+    final uid = _firebaseAuth.currentUser?.uid;
+    if (uid != null) {
+      final user = await _firestoreService.getUserDocument(uid);
+      if (user != null) {
+        setState(() {
+          _currentUser = user;
+        });
+      }
+    }
   }
 
   void _decodeQRData(String qrData) {

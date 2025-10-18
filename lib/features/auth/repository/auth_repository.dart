@@ -1,9 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:postgres/postgres.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/firestore_service.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/services/postgres_db_service.dart';
+import 'package:uuid/uuid.dart';
 
 class AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirestoreService _firestoreService = FirestoreService();
+  final PostgresDbService dbService = PostgresDbService();
+  final Uuid _uuid = const Uuid();
 
   // Constructor to configure Firebase Auth settings
   AuthRepository() {
@@ -83,6 +88,8 @@ class AuthRepository {
       // Get the user ID
       final uid = userCredential.user!.uid;
 
+      final postgresId = _uuid.v4();
+
       // Store user details in Firestore
       await _firestoreService.createUserDocument(
         uid: uid,
@@ -90,6 +97,16 @@ class AuthRepository {
         email: email.trim(),
         nic: nic.trim().toUpperCase(),
         checkerId: checkerId.trim(),
+        postgresId: postgresId,
+      );
+
+      // Save checker details to PostgreSQL database
+      await _saveCheckerToDatabase(
+        id: postgresId,
+        name: name.trim(),
+        email: email.trim(),
+        nicNumber: nic.trim().toUpperCase(),
+        checkerNumber: checkerId.trim(),
       );
 
       // Optional: Update Firebase Auth display name
@@ -131,6 +148,53 @@ class AuthRepository {
       return null;
     } catch (e) {
       throw Exception('Failed to get user data: $e');
+    }
+  }
+
+  Future<void> _saveCheckerToDatabase({
+    required String id,
+    required String name,
+    required String email,
+    required String nicNumber,
+    required String checkerNumber,
+  }) async {
+    try {
+      // Connect to database
+      await dbService.connect();
+
+      // Insert checker details into RW_SYS_Checker table
+      final query = '''
+        INSERT INTO public."RW_SYS_Checker" (
+          "Id", "Name", "Email", "NicNumber", "CheckerNumber", 
+          "Deleted", "CreatedOn"
+        ) VALUES (
+          @id, @name, @email, @nicNumber, @checkerNumber, 
+          @deleted, @createdOn
+        )
+        ''';
+
+      await dbService.connection.execute(
+        Sql.named(query),
+        parameters: {
+          'id': id,
+          'name': name,
+          'email': email,
+          'nicNumber': nicNumber,
+          'checkerNumber': checkerNumber,
+          'deleted': false,
+          'createdOn': DateTime.now(),
+        },
+      );
+
+      print('✅ Checker saved to PostgreSQL database');
+    } catch (e) {
+      print('❌ Error saving checker to database: $e');
+      throw Exception('Failed to save checker details: $e');
+    } finally {
+      // Close connection
+      if (dbService.isConnected) {
+        await dbService.close();
+      }
     }
   }
 }

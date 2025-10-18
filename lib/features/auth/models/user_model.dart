@@ -6,6 +6,7 @@ class UserModel {
   final String checkerId;
   final DateTime createdAt;
   final DateTime? updatedAt;
+  final String postgresId;
 
   UserModel({
     required this.uid,
@@ -15,6 +16,7 @@ class UserModel {
     required this.checkerId,
     required this.createdAt,
     this.updatedAt,
+    required this.postgresId,
   });
 
   // Convert UserModel to Map for Firestore
@@ -27,6 +29,7 @@ class UserModel {
       'checkerId': checkerId,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'postgresId': postgresId,
     };
   }
 
@@ -42,6 +45,7 @@ class UserModel {
       updatedAt: map['updatedAt'] != null
           ? DateTime.parse(map['updatedAt'])
           : null,
+      postgresId: map['postgresId'] ?? '',
     );
   }
 
@@ -54,6 +58,7 @@ class UserModel {
     String? checkerId,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? postgresId,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -63,6 +68,7 @@ class UserModel {
       checkerId: checkerId ?? this.checkerId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      postgresId: postgresId ?? this.postgresId,
     );
   }
 }
