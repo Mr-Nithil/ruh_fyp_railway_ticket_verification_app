@@ -17,6 +17,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
   String? _selectedScheduleId;
   String? _selectedTrainName;
   String? _selectedRouteInfo;
+  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -59,6 +60,58 @@ class _TicketListScreenState extends State<TicketListScreen> {
     return time.toString().split('.').first; // Remove microseconds
   }
 
+  Future<void> _showDateFilterDialog() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.green.shade700,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  void _clearDateFilter() {
+    setState(() {
+      _selectedDate = null;
+    });
+  }
+
+  List<BookingDetails> _filterBookingsByDate(List<BookingDetails> bookings) {
+    if (_selectedDate == null) {
+      return bookings;
+    }
+
+    return bookings.where((booking) {
+      if (booking.travelDate == null) return false;
+
+      try {
+        final bookingDate = DateTime.parse(booking.travelDate!);
+        return bookingDate.year == _selectedDate!.year &&
+            bookingDate.month == _selectedDate!.month &&
+            bookingDate.day == _selectedDate!.day;
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,6 +125,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
 
             // Train Info Card
             if (_selectedTrainName != null) _buildTrainInfoCard(),
+
+            // Date Filter Info
+            if (_selectedDate != null) _buildDateFilterCard(),
 
             // Ticket List
             Expanded(
@@ -89,10 +145,15 @@ class _TicketListScreenState extends State<TicketListScreen> {
                     return _buildEmptyView();
                   }
 
-                  return _buildTicketList(
+                  final filteredBookings = _filterBookingsByDate(
                     controller.bookings!,
-                    _selectedTrainName,
                   );
+
+                  if (filteredBookings.isEmpty) {
+                    return _buildNoResultsView();
+                  }
+
+                  return _buildTicketList(filteredBookings, _selectedTrainName);
                 },
               ),
             ),
@@ -163,6 +224,9 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 builder: (context, controller, child) {
                   if (controller.bookings != null &&
                       controller.bookings!.isNotEmpty) {
+                    final filteredCount = _filterBookingsByDate(
+                      controller.bookings!,
+                    ).length;
                     return Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -173,7 +237,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        '${controller.bookings!.length}',
+                        '$filteredCount',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -186,6 +250,49 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 },
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDateFilterCard() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Colors.white, Colors.green.shade50],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green.shade200, width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.calendar_today, size: 18, color: Colors.green.shade700),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Filtered by: ${_formatDate(_selectedDate.toString())}',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.green.shade700,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: _clearDateFilter,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(Icons.close, size: 16, color: Colors.red.shade700),
+            ),
           ),
         ],
       ),
@@ -262,6 +369,37 @@ class _TicketListScreenState extends State<TicketListScreen> {
                     ],
                   ),
               ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Filter Button
+          GestureDetector(
+            onTap: _showDateFilterDialog,
+            child: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                gradient: _selectedDate != null
+                    ? LinearGradient(
+                        colors: [Colors.green.shade400, Colors.green.shade600],
+                      )
+                    : LinearGradient(
+                        colors: [Colors.grey.shade300, Colors.grey.shade400],
+                      ),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: (_selectedDate != null ? Colors.green : Colors.grey)
+                        .withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.filter_list,
+                color: Colors.white,
+                size: 24,
+              ),
             ),
           ),
         ],
@@ -655,6 +793,74 @@ class _TicketListScreenState extends State<TicketListScreen> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoResultsView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.event_busy, size: 80, color: Colors.orange.shade300),
+            const SizedBox(height: 20),
+            const Text(
+              'No Tickets for Selected Date',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No bookings found for ${_formatDate(_selectedDate.toString())}. Try selecting a different date.',
+              style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 40),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: _clearDateFilter,
+                  icon: const Icon(Icons.clear),
+                  label: const Text('Clear Filter'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 15,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _showDateFilterDialog,
+                  icon: const Icon(Icons.calendar_today),
+                  label: const Text('Change Date'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 15,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
