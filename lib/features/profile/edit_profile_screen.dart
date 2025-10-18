@@ -163,11 +163,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           "assets/profile.jpg",
                           fit: BoxFit.cover,
                           width: double.infinity,
-                          height: MediaQuery.of(context).size.height * 0.3,
+                          height: MediaQuery.of(context).size.height * 0.35,
                         ),
                         Container(
                           width: double.infinity,
-                          height: MediaQuery.of(context).size.height * 0.3,
+                          height: MediaQuery.of(context).size.height * 0.35,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,

@@ -5,6 +5,7 @@ import 'package:ruh_fyp_railway_ticket_verification_app/custom_bottom_nav_bar.da
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/controller/auth_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/controller/schedule_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/controller/transaction_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/ticket_list/controller/ticket_list_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/firebase_options.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/logo_screen.dart';
 
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => AuthController()),
         ChangeNotifierProvider(create: (context) => TransactionController()),
         ChangeNotifierProvider(create: (context) => ScheduleController()),
+        ChangeNotifierProvider(create: (context) => TicketListController()),
       ],
       builder: (context, child) => MaterialApp(
         debugShowCheckedModeBanner: false,

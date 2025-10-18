@@ -322,25 +322,25 @@ class _QRResultScreenState extends State<QRResultScreen> {
                 const SizedBox(height: 12),
                 _buildModernInfoCard(
                   icon: Icons.access_time_outlined,
-                  label: 'Departure',
+                  label: 'Departure - Arrival',
                   value:
-                      '${_formatTime(booking.schedule.departureTime)} (${booking.schedule.route!.fromStationName})',
+                      '${_formatTime(booking.schedule.departureTime)} - ${_formatTime(booking.schedule.arrivalTime)}',
                   gradientColors: [
                     Colors.green.shade400,
                     Colors.green.shade600,
                   ],
                 ),
-                const SizedBox(height: 12),
-                _buildModernInfoCard(
-                  icon: Icons.access_time_outlined,
-                  label: 'Arrival',
-                  value:
-                      '${_formatTime(booking.schedule.arrivalTime)} (${booking.schedule.route!.toStationName})',
-                  gradientColors: [
-                    Colors.green.shade400,
-                    Colors.green.shade600,
-                  ],
-                ),
+                // const SizedBox(height: 12),
+                // _buildModernInfoCard(
+                //   icon: Icons.access_time_outlined,
+                //   label: 'Arrival',
+                //   value:
+                //       '${_formatTime(booking.schedule.arrivalTime)} (${booking.schedule.route!.toStationName})',
+                //   gradientColors: [
+                //     Colors.green.shade400,
+                //     Colors.green.shade600,
+                //   ],
+                // ),
               ],
             ),
           ),

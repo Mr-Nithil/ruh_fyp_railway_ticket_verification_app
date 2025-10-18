@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_result_screen.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/ticket_list/ticket_list_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/firestore_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/permission_service.dart';
@@ -409,13 +410,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       _buildFeatureButton(
                         icon: Icons.list_alt,
                         label: 'Ticket List',
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Ticket List coming soon!'),
+                        onTap: () async {
+                          // Check if train is selected before navigating
+                          if (!_hasSelectedTrain) {
+                            _showTrainNotSelectedDialog();
+                            return;
+                          }
+
+                          // Navigate to ticket list screen
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const TicketListScreen(),
                             ),
                           );
                         },
+                        isDisabled: !_hasSelectedTrain,
                       ),
                       _buildFeatureButton(
                         icon: Icons.analytics,

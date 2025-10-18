@@ -3,7 +3,10 @@ import 'package:postgres/postgres.dart';
 /// Complete booking details with all related information
 class BookingDetails {
   final String bookingId;
+  final String? bookingReference;
   final String? scheduleId;
+  final String? userId;
+  final PrimaryUser? primaryUser;
   final String? bookingDate;
   final String? travelDate;
   final double? totalAmount;
@@ -11,10 +14,20 @@ class BookingDetails {
   final String? contactPhone;
   final ScheduleDetails schedule;
   final List<PassengerDetails> passengers;
+  final bool? isReviewed;
+  final bool? isFraudConfirmed;
+  final Time? checkedOn;
+  final String? checkerRemark;
+  final bool? isApproved;
+  final bool? isChecked;
+  final Checker? checker;
 
   BookingDetails({
     required this.bookingId,
+    this.bookingReference,
     this.scheduleId,
+    this.userId,
+    this.primaryUser,
     this.bookingDate,
     this.travelDate,
     this.totalAmount,
@@ -22,6 +35,13 @@ class BookingDetails {
     this.contactPhone,
     required this.schedule,
     required this.passengers,
+    this.isReviewed,
+    this.isFraudConfirmed,
+    this.checkedOn,
+    this.checkerRemark,
+    this.isApproved,
+    this.isChecked,
+    this.checker,
   });
 
   /// Get number of passengers (max 5)
@@ -56,8 +76,8 @@ class BookingDetails {
 class ScheduleDetails {
   final String? scheduleId;
   final String? trainName;
-  final Time? departureTime;
-  final Time? arrivalTime;
+  final dynamic departureTime; // Can be Time or Interval from postgres package
+  final dynamic arrivalTime; // Can be Time or Interval from postgres package
   final RouteDetails? route;
 
   ScheduleDetails({
@@ -166,4 +186,26 @@ class TrainClassDetails {
 
   /// Get class name or default
   String get displayName => className ?? 'Standard Class';
+}
+
+class Checker {
+  final String? checkerId;
+  final String? checkerName;
+  final String? checkerEmail;
+  final String? checkerNic;
+  final String? checkerNumber;
+
+  Checker({
+    this.checkerId,
+    this.checkerName,
+    this.checkerEmail,
+    this.checkerNic,
+    this.checkerNumber,
+  });
+}
+
+class PrimaryUser {
+  final bool? isActive;
+
+  PrimaryUser({this.isActive});
 }
