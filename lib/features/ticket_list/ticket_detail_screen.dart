@@ -19,7 +19,48 @@ class TicketDetailScreen extends StatelessWidget {
 
   String _formatTime(dynamic time) {
     if (time == null) return 'N/A';
-    return time.toString().split('.').first;
+
+    try {
+      final timeStr = time.toString();
+
+      // Check if it's an Interval type (contains "microseconds")
+      if (timeStr.contains('microseconds')) {
+        final numericPart = timeStr.split(' ').first;
+        final microseconds = int.tryParse(numericPart);
+
+        if (microseconds != null) {
+          // Convert microseconds to hours and minutes (time of day)
+          final totalSeconds = microseconds ~/ 1000000;
+          final hours = totalSeconds ~/ 3600;
+          final minutes = (totalSeconds % 3600) ~/ 60;
+          return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
+        }
+      }
+
+      // Fallback for other formats
+      return timeStr;
+    } catch (e) {
+      print('Error formatting time: $e');
+      return 'N/A';
+    }
+  }
+
+  String _formatDateTime(dynamic dateTime) {
+    if (dateTime == null) return 'N/A';
+
+    try {
+      if (dateTime is DateTime) {
+        return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} '
+            '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+      }
+
+      // Try parsing as string
+      final dt = DateTime.parse(dateTime.toString());
+      return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+          '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dateTime.toString();
+    }
   }
 
   @override
@@ -511,7 +552,9 @@ class TicketDetailScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        _formatTime(booking.checkedOn),
+                                        _formatDateTime(
+                                          booking.checkedOn,
+                                        ), // Changed from _formatTime
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w700,
