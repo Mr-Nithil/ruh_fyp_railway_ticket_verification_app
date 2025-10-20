@@ -243,19 +243,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           }
                         },
                       ),
-                      // const SizedBox(height: 12),
-                      // _buildActionCard(
-                      //   icon: Icons.history_outlined,
-                      //   title: 'Activity History',
-                      //   subtitle: 'View your verification history',
-                      //   onTap: () {
-                      //     ScaffoldMessenger.of(context).showSnackBar(
-                      //       const SnackBar(
-                      //         content: Text('Activity history coming soon!'),
-                      //       ),
-                      //     );
-                      //   },
-                      // ),
+                      const SizedBox(height: 12),
+                      _buildActionCard(
+                        icon: Icons.lock_reset_outlined,
+                        title: 'Reset Password',
+                        subtitle: 'Change your account password',
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Reset password coming soon!'),
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),

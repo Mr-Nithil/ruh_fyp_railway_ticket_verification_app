@@ -114,7 +114,7 @@ class SettingsScreen extends StatelessWidget {
                         ),
                         child: const Icon(
                           Icons.settings,
-                          size: 50,
+                          size: 60,
                           color: Colors.white,
                         ),
                       ),
