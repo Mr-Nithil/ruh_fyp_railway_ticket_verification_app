@@ -1,5 +1,5 @@
 import 'package:postgres/postgres.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/booking_detail.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/postgres_db_service.dart';
 
 class TicketListRepository {

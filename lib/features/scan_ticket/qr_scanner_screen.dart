@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_result_screen.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/qr_result_screen.dart';
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});

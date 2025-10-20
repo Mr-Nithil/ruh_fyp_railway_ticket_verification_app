@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/qr_data_model.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/qr_data_model.dart';
 
 /// Example usage of the TicketData model with fraud detection
 void main() {

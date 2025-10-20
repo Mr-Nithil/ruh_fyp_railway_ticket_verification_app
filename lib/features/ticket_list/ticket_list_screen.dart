@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/booking_detail.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/ticket_list/controller/ticket_list_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/ticket_list/ticket_detail_screen.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/shared_preferences_service.dart';

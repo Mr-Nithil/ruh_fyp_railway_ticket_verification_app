@@ -1,7 +1,8 @@
 import 'package:postgres/postgres.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/checker_remarks_model.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/models/train_schedule.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/booking_detail.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/checker_remarks_model.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/fraud_booking_model.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/select_train/models/train_schedule.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/postgres_db_service.dart';
 
 class TransactionRepository {
@@ -27,6 +28,7 @@ class TransactionRepository {
           b."Id" as "BookingId",
           b."BookingReference",
           b."ScheduleId",
+          b."UserId",
           b."BookingDate",
           b."TravelDate",
           b."TotalAmount",
@@ -72,6 +74,7 @@ class TransactionRepository {
           tc."ClassName"
           
         FROM "RW_SYS_Booking" b
+        LEFT JOIN "Users" u ON b."UserId"::text = u."Id"
         LEFT JOIN "RW_SET_Schedule" s ON b."ScheduleId" = s."Id"
         LEFT JOIN "RW_SET_Train" t ON s."TrainId" = t."Id"
         LEFT JOIN "RW_SET_Route" r ON s."RouteId" = r."Id"
@@ -173,6 +176,7 @@ class TransactionRepository {
       bookingId: firstRow['BookingId']?.toString() ?? '',
       bookingReference: firstRow['BookingReference']?.toString(),
       scheduleId: firstRow['ScheduleId']?.toString(),
+      userId: firstRow['UserId']?.toString(),
       bookingDate: firstRow['BookingDate']?.toString(),
       travelDate: firstRow['TravelDate']?.toString(),
       totalAmount: _parseDouble(firstRow['TotalAmount']),
@@ -346,5 +350,76 @@ class TransactionRepository {
       checkerRemark: remarks.checkerRemark,
       isApproved: remarks.isApproved,
     );
+  }
+
+  /// Fetches fraud-confirmed bookings for a specific user
+  /// Returns list of FraudBooking objects where IsFraudConfirmed is true
+  Future<List<FraudBooking>?> getFraudConfirmedBookingsByUserID(
+    String userId,
+  ) async {
+    try {
+      // Connect to database
+      await dbService.connect();
+
+      final query = '''
+        SELECT 
+          "Id",
+          "UserId",
+          "BookingId",
+          "BookingReference",
+          "Route",
+          "TransactionDateTime",
+          "IsReviewed",
+          "IsFraudConfirmed",
+          "FraudScore"
+        FROM public."RW_SYS_BookingDetailedInfo"
+        WHERE "UserId" = @userId
+          AND "IsFraudConfirmed" = true
+          AND "Deleted" = false
+        ORDER BY "TransactionDateTime" DESC;
+      ''';
+
+      // Execute query with parameter
+      final result = await dbService.connection.execute(
+        Sql.named(query),
+        parameters: {'userId': userId},
+      );
+
+      // Close connection
+      if (dbService.connection.isOpen) {
+        await dbService.close();
+      }
+
+      // Check if any results found
+      if (result.isEmpty) {
+        print('ℹ️ No fraud-confirmed bookings found for user: $userId');
+        return [];
+      }
+
+      // Map results to FraudBooking objects
+      final fraudBookings = result.map((row) {
+        final rowMap = row.toColumnMap();
+        return FraudBooking(
+          id: rowMap['Id']?.toString() ?? '',
+          userId: rowMap['UserId']?.toString(),
+          bookingId: rowMap['BookingId']?.toString(),
+          bookingReference: rowMap['BookingReference']?.toString(),
+          route: rowMap['Route']?.toString(),
+          bookingDate: rowMap['TransactionDateTime']?.toString(),
+          isReviewed: rowMap['IsReviewed'] as bool?,
+          isFraudConfirmed: rowMap['IsFraudConfirmed'] as bool?,
+          fraudScore: _parseInt(rowMap['FraudScore']),
+        );
+      }).toList();
+
+      print(
+        '✅ Found ${fraudBookings.length} fraud-confirmed booking(s) for user: $userId',
+      );
+      return fraudBookings;
+    } catch (e) {
+      print('❌ Error fetching fraud-confirmed bookings: $e');
+      await dbService.close();
+      rethrow;
+    }
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/booking_detail.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/ticket_list/repository/ticket_list_repository.dart';
 
 class TicketListController extends ChangeNotifier {

@@ -6,9 +6,10 @@ import 'package:provider/provider.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/models/user_model.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/firestore_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/shared_preferences_service.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/controller/transaction_controller.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/checker_remarks_model.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/controller/transaction_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/booking_detail.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/checker_remarks_model.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/fraud_booking_model.dart';
 import 'package:uuid/uuid.dart';
 
 class QRResultScreen extends StatefulWidget {
@@ -32,6 +33,8 @@ class _QRResultScreenState extends State<QRResultScreen> {
   Color statusColor = Colors.grey;
   Color statusColorDark = Colors.grey.shade700;
   late final UserModel _currentUser;
+  late final String _currentUserId;
+  int _fraudBookings = 0;
 
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirestoreService _firestoreService = FirestoreService();
@@ -47,6 +50,42 @@ class _QRResultScreenState extends State<QRResultScreen> {
       _loadBookingDetails();
       _loadCurrentUser();
     });
+  }
+
+  Future<void> _loadFraudBookings() async {
+    final transactionController = Provider.of<TransactionController>(
+      context,
+      listen: false,
+    );
+
+    try {
+      await transactionController.fetchFraudConfirmedBookings(_currentUserId);
+
+      print('🔍 Fetched fraud-confirmed bookings for user ID: $_currentUserId');
+
+      final fraudBookings = transactionController.fraudBookings;
+
+      if (!mounted) return;
+
+      if (fraudBookings != null) {
+        setState(() {
+          _fraudBookings = fraudBookings.length;
+          print('⚠️ Number of fraud-confirmed bookings: $_fraudBookings');
+
+          // Set suspicion detected based on fraud bookings count
+          if (_fraudBookings > 0) {
+            _suspicionDetected = true;
+            print('🚨 Suspicion detected! Setting flag to true');
+          } else {
+            _suspicionDetected = false;
+            print('✅ No fraud bookings found. Setting flag to false');
+          }
+        });
+      }
+    } catch (e) {
+      print('❌ Error loading fraud bookings: $e');
+      // Handle errors if necessary
+    }
   }
 
   void _loadCurrentUser() async {
@@ -144,8 +183,15 @@ class _QRResultScreenState extends State<QRResultScreen> {
 
       setState(() {
         _bookingDetails = transactionController.bookingDetails;
-        _isLoading = false;
 
+        _currentUserId = _bookingDetails!.userId!;
+      });
+
+      await _loadFraudBookings();
+
+      if (!mounted) return;
+
+      setState(() {
         if (_bookingDetails!.scheduleId != selectedScheduleId) {
           print('Selected Schedule ID: $selectedScheduleId');
           print('Ticket Schedule ID: ${_bookingDetails!.scheduleId}');
@@ -156,10 +202,10 @@ class _QRResultScreenState extends State<QRResultScreen> {
           });
         }
 
-        if (transactionController.bookingDetails!.isReviewed == true &&
-            transactionController.bookingDetails!.isFraudConfirmed == true) {
-          _suspicionDetected = true;
-        }
+        // if (transactionController.bookingDetails!.isReviewed == true &&
+        //     transactionController.bookingDetails!.isFraudConfirmed == true) {
+        //   _suspicionDetected = true;
+        // }
 
         if (transactionController.bookingDetails!.isChecked == true) {
           _isCheckedBefore = true;
@@ -168,6 +214,8 @@ class _QRResultScreenState extends State<QRResultScreen> {
         if (transactionController.bookingDetails!.isApproved == true) {
           _isApprovedTicket = true;
         }
+
+        _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
@@ -844,7 +892,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
           colors: [statusColorDark, statusColor],
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+      padding: const EdgeInsets.fromLTRB(24, 0, 24, 22),
       child: Column(
         children: [
           if (!_isCheckedBefore)
@@ -905,6 +953,56 @@ class _QRResultScreenState extends State<QRResultScreen> {
                       letterSpacing: 0.3,
                     ),
                     textAlign: TextAlign.center,
+                  ),
+                const SizedBox(height: 8),
+                if (_suspicionDetected)
+                  InkWell(
+                    onTap: () => _showFraudBookingsDialog(context),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              '$_fraudBookings confirmed fraud booking${_fraudBookings > 1 ? 's' : ''} found',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                                letterSpacing: 0.3,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: Colors.white,
+                            size: 16,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -1524,5 +1622,250 @@ class _QRResultScreenState extends State<QRResultScreen> {
         ),
       ],
     );
+  }
+
+  void _showFraudBookingsDialog(BuildContext context) {
+    final transactionController = Provider.of<TransactionController>(
+      context,
+      listen: false,
+    );
+
+    final fraudBookings = transactionController.fraudBookings ?? [];
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 600),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Colors.red.shade700, Colors.red.shade500],
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.warning_amber_rounded,
+                        color: Colors.white,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Fraud History',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '$_fraudBookings confirmed fraud booking${_fraudBookings > 1 ? 's' : ''}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              // List of fraud bookings
+              Flexible(
+                child: fraudBookings.isEmpty
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text(
+                            'No fraud bookings found',
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        shrinkWrap: true,
+                        itemCount: fraudBookings.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final booking = fraudBookings[index];
+                          return _buildFraudBookingCard(booking);
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFraudBookingCard(FraudBooking booking) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade200, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Booking Reference
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.confirmation_number_outlined,
+                  size: 20,
+                  color: Colors.red.shade700,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Booking Reference',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      booking.bookingReference ?? 'N/A',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Fraud Score Badge
+              if (booking.fraudScore != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getFraudScoreColor(booking.fraudScore!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.speed, size: 14, color: Colors.white),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${booking.fraudScore}%',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Divider(color: Colors.grey.shade300, height: 1),
+          const SizedBox(height: 12),
+          // Route
+          Row(
+            children: [
+              Icon(Icons.route, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  booking.route ?? 'N/A',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // Booking Date
+          Row(
+            children: [
+              Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 8),
+              Text(
+                'Booked: ${_formatDate(booking.bookingDate)}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getFraudScoreColor(int score) {
+    if (score >= 80) {
+      return Colors.red.shade700;
+    } else if (score >= 60) {
+      return Colors.orange.shade700;
+    } else {
+      return Colors.amber.shade700;
+    }
   }
 }

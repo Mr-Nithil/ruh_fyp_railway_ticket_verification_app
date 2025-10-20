@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_result_screen.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/qr_result_screen.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/ticket_list/ticket_list_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/firestore_service.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/permission_service.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/qr_scanner_screen.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/qr_scanner_screen.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/shared_preferences_service.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/train_selection_popup.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/select_train/train_selection_popup.dart';
 
 class HomeScreen extends StatefulWidget {
   HomeScreen({super.key});
@@ -427,14 +427,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         isDisabled: !_hasSelectedTrain,
                       ),
                       _buildFeatureButton(
-                        icon: Icons.analytics,
-                        label: 'Reports',
+                        icon: Icons.history,
+                        label: 'History',
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => const QRResultScreen(
                                 qrData:
-                                    'MDE5YTAxMzctY2RkZS03MTc2LTllNzgtNTBlMTE0ODRjNzk1IHwgQksyMDI1MTAyMDE5MTk=',
+                                    'MDE5YTAxMzktOTIzYy03YjVkLTg5NDYtYzRmN2U4MjE4YTIzIHwgQksyMDI1MTAyMDQ1NDg=',
                               ),
                             ),
                           );

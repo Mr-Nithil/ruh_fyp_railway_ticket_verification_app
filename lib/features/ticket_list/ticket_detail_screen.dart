@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/qr_verify/models/booking_detail.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/booking_detail.dart';
 
 class TicketDetailScreen extends StatelessWidget {
   final BookingDetails booking;

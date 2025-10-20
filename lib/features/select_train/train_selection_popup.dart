@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:postgres/postgres.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/controller/schedule_controller.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/models/train_schedule.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/select_train/controller/schedule_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/select_train/models/train_schedule.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/shared_preferences_service.dart';
 
 class TrainSelectionPopup extends StatefulWidget {

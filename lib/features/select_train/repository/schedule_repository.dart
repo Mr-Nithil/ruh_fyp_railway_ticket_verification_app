@@ -1,5 +1,5 @@
 import 'package:postgres/postgres.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/schedule/models/train_schedule.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/select_train/models/train_schedule.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/postgres_db_service.dart';
 
 class ScheduleRepository {
