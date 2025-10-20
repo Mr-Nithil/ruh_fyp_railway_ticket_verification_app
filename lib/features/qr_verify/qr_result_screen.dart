@@ -531,29 +531,57 @@ class _QRResultScreenState extends State<QRResultScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Verification Details',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black87,
-                      letterSpacing: 0.2,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Verification Details',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 0, 5, 0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _isApprovedTicket ? 'APPROVED' : 'FLAGGED',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Colors.white, statusColor.withOpacity(0.1)],
-                      ),
+                      color: Colors.white,
+                      // gradient: LinearGradient(
+                      //   begin: Alignment.topLeft,
+                      //   end: Alignment.bottomRight,
+                      //   colors: [Colors.white, statusColor.withOpacity(0.1)],
+                      // ),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: statusColor.withOpacity(0.3),
-                        width: 2,
-                      ),
+                      // border: Border.all(
+                      //   color: statusColor.withOpacity(0.3),
+                      //   width: 2,
+                      // ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.06),
@@ -570,10 +598,10 @@ class _QRResultScreenState extends State<QRResultScreen> {
                             children: [
                               Icon(
                                 Icons.person_outline,
-                                size: 20,
-                                color: Colors.grey[700],
+                                size: 30,
+                                color: statusColor,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 15),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -606,11 +634,11 @@ class _QRResultScreenState extends State<QRResultScreen> {
                           Row(
                             children: [
                               Icon(
-                                Icons.person_outline,
-                                size: 20,
-                                color: Colors.grey[700],
+                                Icons.badge_outlined,
+                                size: 30,
+                                color: statusColor,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 15),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -645,10 +673,10 @@ class _QRResultScreenState extends State<QRResultScreen> {
                             children: [
                               Icon(
                                 Icons.access_time_outlined,
-                                size: 20,
-                                color: Colors.grey[700],
+                                size: 30,
+                                color: statusColor,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 15),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -686,10 +714,10 @@ class _QRResultScreenState extends State<QRResultScreen> {
                             children: [
                               Icon(
                                 Icons.comment_outlined,
-                                size: 20,
-                                color: Colors.grey[700],
+                                size: 30,
+                                color: statusColor,
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 15),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
