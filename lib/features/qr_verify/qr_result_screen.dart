@@ -602,6 +602,44 @@ class _QRResultScreenState extends State<QRResultScreen> {
                           ),
                           const SizedBox(height: 16),
                         ],
+                        if (booking.checker!.checkerNumber != null) ...[
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline,
+                                size: 20,
+                                color: Colors.grey[700],
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Checked by (ID)',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      booking.checker!.checkerNumber ??
+                                          'Unknown',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         if (booking.checkedOn != null) ...[
                           Row(
                             children: [
@@ -1134,9 +1172,12 @@ class _QRResultScreenState extends State<QRResultScreen> {
     final TextEditingController remarksController = TextEditingController();
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
+    // Capture the scaffold context BEFORE showing any dialog
+    final scaffoldContext = context;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
@@ -1243,19 +1284,20 @@ class _QRResultScreenState extends State<QRResultScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
               if (formKey.currentState!.validate()) {
-                Navigator.of(context).pop();
+                // Close the confirmation dialog first
+                Navigator.of(dialogContext).pop();
 
-                // Show loading indicator
+                // Show loading indicator using the scaffold context
                 showDialog(
-                  context: context,
+                  context: scaffoldContext,
                   barrierDismissible: false,
-                  builder: (context) => Center(
+                  builder: (loadingDialogContext) => Center(
                     child: Card(
                       child: Padding(
                         padding: const EdgeInsets.all(20),
@@ -1288,7 +1330,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                   // Get the transaction controller
                   final transactionController =
                       Provider.of<TransactionController>(
-                        context,
+                        scaffoldContext,
                         listen: false,
                       );
 
@@ -1303,54 +1345,86 @@ class _QRResultScreenState extends State<QRResultScreen> {
                     checkedOn: DateTime.now(),
                   );
 
-                  // Update checker remarks
-                  await transactionController.updateCheckerRemarks(
-                    remarks: remarks,
-                  );
+                  // Update checker remarks and get success status
+                  final isSuccess = await transactionController
+                      .updateCheckerRemarks(remarks: remarks);
 
                   // Close loading dialog
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
+                  if (scaffoldContext.mounted) {
+                    Navigator.of(scaffoldContext).pop();
 
-                    // Show success message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          children: [
-                            Icon(
-                              isApproval ? Icons.check_circle : Icons.flag,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                isApproval
-                                    ? 'Ticket approved successfully!'
-                                    : 'Ticket flagged successfully!',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                    if (isSuccess) {
+                      // Show success message
+                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              Icon(
+                                isApproval ? Icons.check_circle : Icons.flag,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  isApproval
+                                      ? 'Ticket approved successfully!'
+                                      : 'Ticket flagged successfully!',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
+                          backgroundColor: isApproval
+                              ? Colors.green
+                              : Colors.red,
+                          duration: const Duration(seconds: 3),
+                          behavior: SnackBarBehavior.floating,
                         ),
-                        backgroundColor: isApproval ? Colors.green : Colors.red,
-                        duration: const Duration(seconds: 3),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
+                      );
 
-                    // Go back to home
-                    Navigator.of(context).pop();
+                      // Go back to home
+                      Navigator.of(scaffoldContext).pop();
+                    } else {
+                      // Show failure message
+                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              const Icon(
+                                Icons.error_outline,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  isApproval
+                                      ? 'Failed to approve ticket. Please try again.'
+                                      : 'Failed to flag ticket. Please try again.',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: Colors.red.shade700,
+                          duration: const Duration(seconds: 5),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
                   }
                 } catch (e) {
                   // Close loading dialog
-                  if (context.mounted) {
-                    Navigator.of(context).pop();
+                  if (scaffoldContext.mounted) {
+                    Navigator.of(scaffoldContext).pop();
 
                     // Show error message
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                       SnackBar(
                         content: Row(
                           children: [

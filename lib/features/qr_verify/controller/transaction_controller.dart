@@ -28,8 +28,8 @@ class TransactionController extends ChangeNotifier {
     }
   }
 
-  Future<void> updateCheckerRemarks({required CheckerRemarks remarks}) async {
-    await _transactionRepository.updateCheckerRemarks(
+  Future<bool> updateCheckerRemarks({required CheckerRemarks remarks}) async {
+    return await _transactionRepository.updateCheckerRemarks(
       bookingId: remarks.bookingId,
       checkedBy: remarks.checkedBy,
       isApproved: remarks.isApproved,

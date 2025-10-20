@@ -528,6 +528,45 @@ class TicketDetailScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 16),
                           ],
+                          if (booking.checker!.checkerNumber != null) ...[
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person_outline,
+                                  size: 20,
+                                  color: Colors.grey[700],
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Checked by (ID)',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[600],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        booking.checker!.checkerNumber ??
+                                            'Unknown',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                           if (booking.checkedOn != null) ...[
                             Row(
                               children: [

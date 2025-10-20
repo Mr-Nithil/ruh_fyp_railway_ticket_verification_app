@@ -16,7 +16,7 @@ class BookingDetails {
   final List<PassengerDetails> passengers;
   final bool? isReviewed;
   final bool? isFraudConfirmed;
-  final Time? checkedOn;
+  final String? checkedOn;
   final String? checkerRemark;
   final bool? isApproved;
   final bool? isChecked;

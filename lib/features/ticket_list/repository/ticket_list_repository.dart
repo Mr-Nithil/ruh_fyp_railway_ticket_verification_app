@@ -206,7 +206,7 @@ class TicketListRepository {
         passengers: passengers,
         isReviewed: firstRow['IsReviewed'] as bool?,
         isFraudConfirmed: firstRow['IsFraudConfirmed'] as bool?,
-        checkedOn: _parseTime(firstRow['CheckedOn']),
+        checkedOn: firstRow['CheckedOn']?.toString(),
         checkerRemark: firstRow['CheckerRemark']?.toString(),
         isApproved: firstRow['IsApproved'] as bool?,
         isChecked: firstRow['IsChecked'] as bool?,

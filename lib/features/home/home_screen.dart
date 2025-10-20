@@ -434,7 +434,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             MaterialPageRoute(
                               builder: (context) => const QRResultScreen(
                                 qrData:
-                                    'MDE5OWU0M2UtOTRkYS03MWE1LWFiMTEtMDlmYWQwYzhlZDFlIHwgQksyMDI1MTAxNTc3MDI=',
+                                    'MDE5YTAxMzctY2RkZS03MTc2LTllNzgtNTBlMTE0ODRjNzk1IHwgQksyMDI1MTAyMDE5MTk=',
                               ),
                             ),
                           );

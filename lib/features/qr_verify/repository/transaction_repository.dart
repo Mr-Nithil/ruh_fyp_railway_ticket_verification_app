@@ -182,7 +182,7 @@ class TransactionRepository {
       passengers: passengers,
       isReviewed: firstRow['IsReviewed'] as bool?,
       isFraudConfirmed: firstRow['IsFraudConfirmed'] as bool?,
-      checkedOn: _parseTime(firstRow['CheckedOn']),
+      checkedOn: firstRow['CheckedOn']?.toString(),
       checkerRemark: firstRow['CheckerRemark']?.toString(),
       isApproved: firstRow['IsApproved'] as bool?,
       isChecked: firstRow['IsChecked'] as bool?,
@@ -281,7 +281,7 @@ class TransactionRepository {
     return null;
   }
 
-  Future<void> updateCheckerRemarks({
+  Future<bool> updateCheckerRemarks({
     required String bookingId,
     required String checkedBy,
     required String checkerRemark,
@@ -322,11 +322,14 @@ class TransactionRepository {
 
       // Check if any rows were updated
       if (result.affectedRows == 0) {
-        throw Exception('No booking found with ID: $bookingId');
+        print('⚠️ No booking found with ID: $bookingId');
+        return false;
       }
+
+      return true;
     } catch (e) {
       print('❌ Error updating checker remarks: $e');
-      rethrow;
+      return false;
     } finally {
       // Close connection
       if (dbService.isConnected) {
@@ -336,8 +339,8 @@ class TransactionRepository {
   }
 
   /// Alternative method using CheckerRemarks model
-  Future<void> updateCheckerRemarksFromModel(CheckerRemarks remarks) async {
-    await updateCheckerRemarks(
+  Future<bool> updateCheckerRemarksFromModel(CheckerRemarks remarks) async {
+    return await updateCheckerRemarks(
       bookingId: remarks.bookingId,
       checkedBy: remarks.checkedBy,
       checkerRemark: remarks.checkerRemark,
