@@ -204,17 +204,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                            ),
+                            // decoration: BoxDecoration(
+                            //   shape: BoxShape.circle,
+                            //   border: Border.all(color: Colors.white, width: 3),
+                            // ),
                             child: CircleAvatar(
                               radius: 50,
-                              backgroundColor: Colors.white,
+                              backgroundColor: Colors.green.shade600,
                               child: Icon(
                                 Icons.person,
                                 size: 50,
-                                color: Colors.green.shade700,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -222,7 +222,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           const Text(
                             'Update Your Information',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 24,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                               letterSpacing: 0.3,
@@ -232,7 +232,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           Text(
                             'Edit your personal details below',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 16,
                               color: Colors.white.withOpacity(0.9),
                               letterSpacing: 0.2,
                             ),
@@ -258,7 +258,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         icon: Icons.email_outlined,
                         label: 'Email',
                         value: widget.userData['email'] ?? 'Not available',
-                        iconColor: Colors.blue,
+                        iconColor: Colors.green,
                       ),
                       const SizedBox(height: 20),
 
@@ -281,7 +281,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         hint:
                             'Enter your NIC (e.g., 123456789V or 199012345678)',
                         validator: _validateNIC,
-                        iconColor: Colors.orange,
+                        iconColor: Colors.green,
                         textCapitalization: TextCapitalization.characters,
                       ),
                       const SizedBox(height: 20),
@@ -293,7 +293,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         label: 'Checker ID',
                         hint: 'Enter your Checker ID',
                         validator: _validateCheckerId,
-                        iconColor: Colors.purple,
+                        iconColor: Colors.green,
                       ),
                       const SizedBox(height: 32),
 

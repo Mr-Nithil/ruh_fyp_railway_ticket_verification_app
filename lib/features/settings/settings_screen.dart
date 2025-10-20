@@ -100,7 +100,7 @@ class SettingsScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.green.shade600,
@@ -114,7 +114,7 @@ class SettingsScreen extends StatelessWidget {
                         ),
                         child: const Icon(
                           Icons.settings,
-                          size: 48,
+                          size: 50,
                           color: Colors.white,
                         ),
                       ),
@@ -139,7 +139,7 @@ class SettingsScreen extends StatelessWidget {
                       Text(
                         'Manage your preferences',
                         style: TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w500,
                           color: Colors.white.withOpacity(0.9),
                           letterSpacing: 0.3,

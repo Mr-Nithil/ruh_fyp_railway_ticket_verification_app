@@ -80,24 +80,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white, width: 3),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
+                            // decoration: BoxDecoration(
+                            //   shape: BoxShape.circle,
+                            //   border: Border.all(color: Colors.white, width: 3),
+                            //   boxShadow: [
+                            //     BoxShadow(
+                            //       color: Colors.black.withOpacity(0.3),
+                            //       blurRadius: 10,
+                            //       offset: const Offset(0, 4),
+                            //     ),
+                            //   ],
+                            // ),
                             child: CircleAvatar(
                               radius: 50,
-                              backgroundColor: Colors.green.shade100,
+                              backgroundColor: Colors.green.shade600,
                               child: Icon(
                                 Icons.person,
                                 size: 50,
-                                color: Colors.green.shade700,
+                                color: Colors.white,
                               ),
                             ),
                           ),
