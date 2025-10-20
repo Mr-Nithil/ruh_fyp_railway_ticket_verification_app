@@ -603,7 +603,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            _isApprovedTicket ? 'APPROVED' : 'FLAGGED',
+                            _isApprovedTicket ? 'APPROVED' : 'REJECTED',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -840,8 +840,8 @@ class _QRResultScreenState extends State<QRResultScreen> {
                           isApproval: false,
                         );
                       },
-                      icon: const Icon(Icons.flag_outlined),
-                      label: const Text('Flag Ticket'),
+                      icon: const Icon(Icons.cancel_outlined),
+                      label: const Text('Reject Ticket'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red.shade700,
                         foregroundColor: Colors.white,
@@ -1056,7 +1056,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                   ),
                 if (!_isApprovedTicket)
                   Text(
-                    'This ticket has already been flagged.',
+                    'This ticket has already been rejected.',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -1308,14 +1308,14 @@ class _QRResultScreenState extends State<QRResultScreen> {
         title: Row(
           children: [
             Icon(
-              isApproval ? Icons.check_circle_outline : Icons.flag_outlined,
+              isApproval ? Icons.check_circle_outline : Icons.cancel_outlined,
               color: isApproval ? Colors.green : Colors.red,
               size: 28,
             ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                isApproval ? 'Approve Ticket' : 'Flag Ticket',
+                isApproval ? 'Approve Ticket' : 'Reject Ticket',
                 style: const TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -1334,7 +1334,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                 Text(
                   isApproval
                       ? 'Are you sure you want to approve this ticket?'
-                      : 'Are you sure you want to flag this ticket as suspicious?',
+                      : 'Are you sure you want to reject this ticket?',
                   style: const TextStyle(fontSize: 16),
                 ),
                 const SizedBox(height: 16),
@@ -1381,7 +1381,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                   decoration: InputDecoration(
                     hintText: isApproval
                         ? 'Enter your remarks for approving this ticket...'
-                        : 'Please describe the suspicious activity or reason for flagging...',
+                        : 'Please describe the suspicious activity or reason for rejecting this ticket.',
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1399,7 +1399,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                     if (value == null || value.trim().isEmpty) {
                       return isApproval
                           ? 'Please provide remarks for approval'
-                          : 'Please provide a reason for flagging';
+                          : 'Please provide a reason for rejecting this ticket';
                     }
                     return null;
                   },
@@ -1439,7 +1439,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                             Text(
                               isApproval
                                   ? 'Approving ticket...'
-                                  : 'Flagging ticket...',
+                                  : 'Rejecting ticket...',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -1494,7 +1494,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                                 child: Text(
                                   isApproval
                                       ? 'Ticket approved successfully!'
-                                      : 'Ticket flagged successfully!',
+                                      : 'Ticket rejected successfully!',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -1528,7 +1528,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                                 child: Text(
                                   isApproval
                                       ? 'Failed to approve ticket. Please try again.'
-                                      : 'Failed to flag ticket. Please try again.',
+                                      : 'Failed to reject ticket. Please try again.',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -1589,7 +1589,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: Text(isApproval ? 'Approve' : 'Flag'),
+            child: Text(isApproval ? 'Approve' : 'Reject'),
           ),
         ],
       ),

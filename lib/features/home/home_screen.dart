@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/qr_result_screen.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/history/checker_history_screen.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/ticket_list/ticket_list_screen.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/services/firestore_service.dart';
@@ -430,15 +430,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         icon: Icons.history,
                         label: 'History',
                         onTap: () {
+                          if (!_hasSelectedTrain) {
+                            _showTrainNotSelectedDialog();
+                            return;
+                          }
+
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const QRResultScreen(
-                                qrData:
-                                    'MDE5YTAxMzktOTIzYy03YjVkLTg5NDYtYzRmN2U4MjE4YTIzIHwgQksyMDI1MTAyMDQ1NDg=',
-                              ),
+                              builder: (context) =>
+                                  const CheckerHistoryScreen(),
                             ),
                           );
                         },
+                        isDisabled: !_hasSelectedTrain,
                       ),
                     ],
                   ),

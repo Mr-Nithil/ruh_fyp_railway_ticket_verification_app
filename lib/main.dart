@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/custom_bottom_nav_bar.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/controller/auth_controller.dart';
+import 'package:ruh_fyp_railway_ticket_verification_app/features/history/controller/history_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/select_train/controller/schedule_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/controller/transaction_controller.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/ticket_list/controller/ticket_list_controller.dart';
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => TransactionController()),
         ChangeNotifierProvider(create: (context) => ScheduleController()),
         ChangeNotifierProvider(create: (context) => TicketListController()),
+        ChangeNotifierProvider(create: (context) => HistoryController()),
       ],
       builder: (context, child) => MaterialApp(
         debugShowCheckedModeBanner: false,

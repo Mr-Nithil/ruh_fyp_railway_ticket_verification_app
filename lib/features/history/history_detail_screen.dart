@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:postgres/postgres.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/scan_ticket/models/booking_detail.dart';
 
-class TicketDetailScreen extends StatelessWidget {
+class HistoryDetailScreen extends StatelessWidget {
   final BookingDetails booking;
-  final String? trainName;
 
-  const TicketDetailScreen({super.key, required this.booking, this.trainName});
+  const HistoryDetailScreen({super.key, required this.booking});
 
   String _formatDate(String? dateStr) {
     if (dateStr == null) return 'N/A';
@@ -20,29 +20,28 @@ class TicketDetailScreen extends StatelessWidget {
   String _formatTime(dynamic time) {
     if (time == null) return 'N/A';
 
-    try {
-      final timeStr = time.toString();
-
-      // Check if it's an Interval type (contains "microseconds")
-      if (timeStr.contains('microseconds')) {
-        final numericPart = timeStr.split(' ').first;
-        final microseconds = int.tryParse(numericPart);
-
-        if (microseconds != null) {
-          // Convert microseconds to hours and minutes (time of day)
-          final totalSeconds = microseconds ~/ 1000000;
-          final hours = totalSeconds ~/ 3600;
-          final minutes = (totalSeconds % 3600) ~/ 60;
-          return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}';
-        }
-      }
-
-      // Fallback for other formats
-      return timeStr;
-    } catch (e) {
-      print('Error formatting time: $e');
-      return 'N/A';
+    // Handle Time type
+    if (time is Time) {
+      final hour = time.hour.toString().padLeft(2, '0');
+      final minute = time.minute.toString().padLeft(2, '0');
+      return '$hour:$minute';
     }
+
+    // Handle Interval type (from PostgreSQL)
+    // Check if it has the properties we need instead of type checking
+    try {
+      // Try accessing Interval properties (hours and minutes)
+      final dynamic intervalTime = time;
+      if (intervalTime.hours != null && intervalTime.minutes != null) {
+        final hour = intervalTime.hours.toString().padLeft(2, '0');
+        final minute = intervalTime.minutes.toString().padLeft(2, '0');
+        return '$hour:$minute';
+      }
+    } catch (e) {
+      // If properties don't exist, fall through
+    }
+
+    return 'N/A';
   }
 
   String _formatDateTime(dynamic dateTime) {
@@ -54,7 +53,6 @@ class TicketDetailScreen extends StatelessWidget {
             '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
       }
 
-      // Try parsing as string
       final dt = DateTime.parse(dateTime.toString());
       return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
           '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
@@ -65,28 +63,9 @@ class TicketDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Determine status
-    final bool isChecked = booking.isChecked ?? false;
-    final bool isApproved = booking.isApproved ?? false;
-    // final bool isApproved = booking.isApproved ?? false;
-    // final bool isFraudConfirmed = booking.isFraudConfirmed ?? false;
-    // final bool isUserActive = booking.primaryUser?.isActive ?? true;
-
-    Color statusColor;
-    String statusText;
-
-    if (booking.isChecked == true) {
-      if (booking.isApproved == true) {
-        statusColor = Colors.green;
-        statusText = 'APPROVED';
-      } else {
-        statusColor = Colors.red;
-        statusText = 'REJECTED';
-      }
-    } else {
-      statusColor = Colors.orange;
-      statusText = 'PENDING REVIEW';
-    }
+    final isApproved = booking.isApproved ?? false;
+    final statusColor = isApproved ? Colors.green : Colors.red;
+    final statusText = isApproved ? 'APPROVED' : 'REJECTED';
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -98,14 +77,14 @@ class TicketDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 28),
 
-            // Booking Reference Section
+            // Booking Reference
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Booking Information',
+                    'Booking Reference',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -116,23 +95,13 @@ class TicketDetailScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildModernInfoCard(
                     icon: Icons.confirmation_number_outlined,
-                    label: 'Booking Reference',
+                    label: 'Reference Number',
                     value: booking.bookingReference ?? 'N/A',
                     gradientColors: [
                       Colors.blue.shade400,
                       Colors.blue.shade600,
                     ],
                   ),
-                  // const SizedBox(height: 12),
-                  // _buildModernInfoCard(
-                  //   icon: Icons.calendar_today_outlined,
-                  //   label: 'Booking On',
-                  //   value: _formatDate(booking.bookingDate),
-                  //   gradientColors: [
-                  //     Colors.blue.shade400,
-                  //     Colors.blue.shade600,
-                  //   ],
-                  // ),
                 ],
               ),
             ),
@@ -158,7 +127,7 @@ class TicketDetailScreen extends StatelessWidget {
                   _buildModernInfoCard(
                     icon: Icons.train_outlined,
                     label: 'Train',
-                    value: trainName ?? 'N/A',
+                    value: booking.schedule.trainName ?? 'N/A',
                     gradientColors: [
                       Colors.green.shade400,
                       Colors.green.shade600,
@@ -195,17 +164,6 @@ class TicketDetailScreen extends StatelessWidget {
                       Colors.green.shade600,
                     ],
                   ),
-                  // const SizedBox(height: 12),
-                  // _buildModernInfoCard(
-                  //   icon: Icons.access_time_outlined,
-                  //   label: 'Arrival',
-                  //   value:
-                  //       '${_formatTime(booking.schedule.arrivalTime)} (${booking.schedule.route?.toStationName ?? 'N/A'})',
-                  //   gradientColors: [
-                  //     Colors.green.shade400,
-                  //     Colors.green.shade600,
-                  //   ],
-                  // ),
                 ],
               ),
             ),
@@ -261,89 +219,6 @@ class TicketDetailScreen extends StatelessWidget {
               ),
             ),
 
-            // const SizedBox(height: 28),
-
-            // // Payment Section
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 20),
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.start,
-            //     children: [
-            //       const Text(
-            //         'Payment Details',
-            //         style: TextStyle(
-            //           fontSize: 20,
-            //           fontWeight: FontWeight.w700,
-            //           color: Colors.black87,
-            //           letterSpacing: 0.2,
-            //         ),
-            //       ),
-            //       const SizedBox(height: 16),
-            //       Container(
-            //         padding: const EdgeInsets.all(20),
-            //         decoration: BoxDecoration(
-            //           gradient: LinearGradient(
-            //             begin: Alignment.topLeft,
-            //             end: Alignment.bottomRight,
-            //             colors: [Colors.white, Colors.amber.shade50],
-            //           ),
-            //           borderRadius: BorderRadius.circular(16),
-            //           boxShadow: [
-            //             BoxShadow(
-            //               color: Colors.black.withOpacity(0.06),
-            //               blurRadius: 15,
-            //               offset: const Offset(0, 3),
-            //             ),
-            //           ],
-            //         ),
-            //         child: Row(
-            //           children: [
-            //             Container(
-            //               padding: const EdgeInsets.all(12),
-            //               decoration: BoxDecoration(
-            //                 gradient: LinearGradient(
-            //                   colors: [
-            //                     Colors.amber.shade400,
-            //                     Colors.amber.shade600,
-            //                   ],
-            //                 ),
-            //                 borderRadius: BorderRadius.circular(12),
-            //               ),
-            //               child: const Icon(
-            //                 Icons.payments,
-            //                 size: 24,
-            //                 color: Colors.white,
-            //               ),
-            //             ),
-            //             const SizedBox(width: 16),
-            //             Column(
-            //               crossAxisAlignment: CrossAxisAlignment.start,
-            //               children: [
-            //                 Text(
-            //                   'Total Amount',
-            //                   style: TextStyle(
-            //                     fontSize: 12,
-            //                     color: Colors.grey[600],
-            //                     fontWeight: FontWeight.w500,
-            //                   ),
-            //                 ),
-            //                 const SizedBox(height: 4),
-            //                 Text(
-            //                   booking.formattedAmount,
-            //                   style: const TextStyle(
-            //                     fontSize: 24,
-            //                     fontWeight: FontWeight.w800,
-            //                     color: Colors.black87,
-            //                   ),
-            //                 ),
-            //               ],
-            //             ),
-            //           ],
-            //         ),
-            //       ),
-            //     ],
-            //   ),
-            // ),
             const SizedBox(height: 28),
 
             // Booking Details
@@ -408,281 +283,225 @@ class TicketDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-
-            // // Contact Information
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 20),
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.start,
-            //     children: [
-            //       const Text(
-            //         'Contact Information',
-            //         style: TextStyle(
-            //           fontSize: 20,
-            //           fontWeight: FontWeight.w700,
-            //           color: Colors.black87,
-            //           letterSpacing: 0.2,
-            //         ),
-            //       ),
-            //       const SizedBox(height: 16),
-            //       _buildModernInfoCard(
-            //         icon: Icons.email_outlined,
-            //         label: 'Email',
-            //         value: booking.contactEmail ?? 'N/A',
-            //         gradientColors: [
-            //           Colors.indigo.shade400,
-            //           Colors.indigo.shade600,
-            //         ],
-            //       ),
-            //       const SizedBox(height: 12),
-            //       _buildModernInfoCard(
-            //         icon: Icons.phone_outlined,
-            //         label: 'Phone',
-            //         value: booking.contactPhone ?? 'N/A',
-            //         gradientColors: [
-            //           Colors.indigo.shade400,
-            //           Colors.indigo.shade600,
-            //         ],
-            //       ),
-            //     ],
-            //   ),
-            // ),
             const SizedBox(height: 28),
 
-            // Verification Details (if checked)
-            if (isChecked) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Verification Details',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black87,
-                            letterSpacing: 0.2,
+            // Verification Details
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Verification Details',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 0, 5, 0),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: statusColor,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            isApproved ? 'APPROVED' : 'REJECTED',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(0, 0, 5, 0),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              isApproved ? 'APPROVED' : 'REJECTED',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 15,
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        // gradient: LinearGradient(
-                        //   begin: Alignment.topLeft,
-                        //   end: Alignment.bottomRight,
-                        //   colors: [Colors.white, statusColor.withOpacity(0.1)],
-                        // ),
-                        borderRadius: BorderRadius.circular(16),
-                        // border: Border.all(
-                        //   color: statusColor.withOpacity(0.3),
-                        //   width: 2,
-                        // ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.06),
-                            blurRadius: 15,
-                            offset: const Offset(0, 3),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (booking.checker != null) ...[
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.person_outline,
+                                size: 30,
+                                color: statusColor,
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Checked by',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      booking.checker!.checkerName ?? 'Unknown',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        if (booking.checker?.checkerNumber != null) ...[
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.badge_outlined,
+                                size: 30,
+                                color: statusColor,
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Checker ID',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      booking.checker!.checkerNumber ??
+                                          'Unknown',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        if (booking.checkedOn != null) ...[
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.access_time_outlined,
+                                size: 30,
+                                color: statusColor,
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Checked on',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _formatDateTime(booking.checkedOn),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                        if (booking.checkerRemark != null &&
+                            booking.checkerRemark!.isNotEmpty) ...[
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.comment_outlined,
+                                size: 30,
+                                color: statusColor,
+                              ),
+                              const SizedBox(width: 15),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Remark',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      booking.checkerRemark!,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (booking.checker != null) ...[
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.person_outline,
-                                  size: 30,
-                                  color: statusColor,
-                                ),
-                                const SizedBox(width: 15),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Checked by',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        booking.checker!.checkerName ??
-                                            'Unknown',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                          if (booking.checker!.checkerNumber != null) ...[
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.badge_outlined,
-                                  size: 30,
-                                  color: statusColor,
-                                ),
-                                const SizedBox(width: 15),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Checked by (ID)',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        booking.checker!.checkerNumber ??
-                                            'Unknown',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                          if (booking.checkedOn != null) ...[
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.access_time_outlined,
-                                  size: 30,
-                                  color: statusColor,
-                                ),
-                                const SizedBox(width: 15),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Checked on',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        _formatDateTime(
-                                          booking.checkedOn,
-                                        ), // Changed from _formatTime
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                          if (booking.checkerRemark != null &&
-                              booking.checkerRemark!.isNotEmpty) ...[
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.comment_outlined,
-                                  size: 30,
-                                  color: statusColor,
-                                ),
-                                const SizedBox(width: 15),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Remark',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        booking.checkerRemark!,
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ],
-                      ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 28),
-            ],
+            ),
+
+            const SizedBox(height: 28),
 
             // Back Button
             Padding(
@@ -781,7 +600,7 @@ class TicketDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Booking Details',
+            'Verification Details',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -801,10 +620,6 @@ class TicketDetailScreen extends StatelessWidget {
         return Icons.check_circle_outline;
       case 'REJECTED':
         return Icons.cancel_outlined;
-      // case 'FRAUD CONFIRMED':
-      //   return Icons.dangerous_outlined;
-      // case 'INACTIVE USER':
-      //   return Icons.person_off_outlined;
       default:
         return Icons.pending_outlined;
     }
@@ -1010,15 +825,13 @@ class TicketDetailScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.badge_outlined, size: 18, color: Colors.grey[700]),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${passenger.idType}: ${passenger.idNumber}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
-                        fontFamily: 'monospace',
-                      ),
+                  Text(
+                    '${passenger.idType}: ${passenger.idNumber}',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
+                      fontFamily: 'monospace',
                     ),
                   ),
                 ],
