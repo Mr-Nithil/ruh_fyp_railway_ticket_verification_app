@@ -73,11 +73,11 @@ class SettingsScreen extends StatelessWidget {
                         "assets/settings.jpg",
                         fit: BoxFit.cover,
                         width: double.infinity,
-                        height: MediaQuery.of(context).size.height * 0.35,
+                        height: MediaQuery.of(context).size.height * 0.4,
                       ),
                       Container(
                         width: double.infinity,
-                        height: MediaQuery.of(context).size.height * 0.35,
+                        height: MediaQuery.of(context).size.height * 0.4,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
