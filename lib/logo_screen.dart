@@ -60,11 +60,14 @@ class _LogoScreenState extends State<LogoScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/Sri_Lanka_Railway_logo.png',
-                  width: 220,
-                  height: 220,
-                  fit: BoxFit.contain,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 220,
+                    height: 220,
+                    fit: BoxFit.contain,
+                  ),
                 ),
                 const SizedBox(height: 15),
                 const Text(

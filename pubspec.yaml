@@ -75,6 +75,8 @@ flutter:
     - assets/profile.jpg
     - assets/settings.jpg
     - assets/login.jpg
+    - assets/register.jpg
+    - assets/logo.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
@@ -105,9 +107,9 @@ flutter:
 
 flutter_launcher_icons:
   android: "launcher_icon"
-  adaptive_icon_foreground: "assets/Sri_Lanka_Railway_logo.png"
+  adaptive_icon_foreground: "assets/logo.png"
   adaptive_icon_background: "#ffffff"
   ios: true
-  image_path: "assets/Sri_Lanka_Railway_logo.png"
+  image_path: "assets/logo.png"
   min_sdk_android: 21
   remove_alpha_ios: true

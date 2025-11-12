@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/controller/auth_controller.dart';
-import 'package:ruh_fyp_railway_ticket_verification_app/custom_bottom_nav_bar.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/auth/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -35,35 +34,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _handleSubmit() async {
-    // Validate form
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // Get form values
       final name = _nameController.text.trim();
       final email = _emailController.text.trim();
-      final password = _passwordController.text;
+      final password = _passwordController.text.trim();
       final nic = _nicController.text.trim();
       final checkerId = _checkerIdController.text.trim();
 
-      // Get the AuthController from Provider
       final authController = context.read<AuthController>();
       await authController.signup(email, password, name, nic, checkerId);
 
       if (mounted) {
-        // Navigate to home screen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
         );
-
-        // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Registration successful! Please verify your email.'),
@@ -81,16 +70,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final height = size.height;
+    final width = size.width;
+
+    final textScale = MediaQuery.of(context).textScaleFactor;
+
     return SafeArea(
       top: false,
       child: Scaffold(
@@ -98,23 +89,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              // Hero Section
               Stack(
                 children: [
-                  // Background Image with Overlay
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(0),
+                  // Background
+                  SizedBox(
+                    height: height * 0.35,
+                    width: double.infinity,
                     child: Stack(
+                      fit: StackFit.expand,
                       children: [
-                        Image.asset(
-                          "assets/login.jpg",
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: MediaQuery.of(context).size.height,
-                        ),
+                        Image.asset("assets/register.jpg", fit: BoxFit.cover),
                         Container(
-                          width: double.infinity,
-                          height: MediaQuery.of(context).size.height,
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               begin: Alignment.topCenter,
@@ -129,29 +114,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ],
                     ),
                   ),
-                  // Logo and Title
+
+                  // Header section
                   Positioned(
-                    bottom: MediaQuery.of(context).size.height * 0.025,
+                    bottom: height * 0.03,
                     left: 0,
                     right: 0,
                     child: Column(
                       children: [
-                        Image.asset(
-                          'assets/Sri_Lanka_Railway_logo.png',
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
+                        // Image.asset(
+                        //   'assets/logo.png',
+                        //   width: width * 0.25,
+                        //   height: width * 0.25,
+                        //   fit: BoxFit.contain,
+                        // ),
+                        SizedBox(height: height * 0.01),
+                        Text(
                           'Create Account',
                           style: TextStyle(
-                            fontSize: 28,
+                            fontSize: width * 0.065 / textScale,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
                             letterSpacing: 0.5,
                             shadows: [
-                              Shadow(
+                              const Shadow(
                                 offset: Offset(0, 2),
                                 blurRadius: 4,
                                 color: Colors.black45,
@@ -159,501 +145,416 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        SizedBox(height: height * 0.005),
                         Text(
                           'Create your verification account',
+                          textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: width * 0.038 / textScale,
                             fontWeight: FontWeight.w500,
                             color: Colors.white.withOpacity(0.9),
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Registration Form Card
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Form Fields Container
-                                Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.06),
-                                        blurRadius: 15,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      // Name Field
-                                      TextFormField(
-                                        controller: _nameController,
-                                        keyboardType: TextInputType.name,
-                                        textInputAction: TextInputAction.next,
-                                        textCapitalization:
-                                            TextCapitalization.words,
-                                        decoration: InputDecoration(
-                                          labelText: 'Full Name',
-                                          hintText: 'Enter your full name',
-                                          prefixIcon: Icon(
-                                            Icons.person_outline,
-                                            color: Colors.green.shade600,
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey[300]!,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.green.shade600,
-                                              width: 2,
-                                            ),
-                                          ),
-                                        ),
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.trim().isEmpty) {
-                                            return 'Please enter your name';
-                                          }
-                                          if (value.trim().length < 2) {
-                                            return 'Name must be at least 2 characters';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      const SizedBox(height: 16),
-
-                                      // Email Field
-                                      TextFormField(
-                                        controller: _emailController,
-                                        keyboardType:
-                                            TextInputType.emailAddress,
-                                        textInputAction: TextInputAction.next,
-                                        decoration: InputDecoration(
-                                          labelText: 'Email',
-                                          hintText: 'Enter your email',
-                                          prefixIcon: Icon(
-                                            Icons.email_outlined,
-                                            color: Colors.green.shade600,
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey[300]!,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.green.shade600,
-                                              width: 2,
-                                            ),
-                                          ),
-                                        ),
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.trim().isEmpty) {
-                                            return 'Please enter your email';
-                                          }
-                                          // Basic email validation
-                                          final emailRegex = RegExp(
-                                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                                          );
-                                          if (!emailRegex.hasMatch(
-                                            value.trim(),
-                                          )) {
-                                            return 'Please enter a valid email';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      const SizedBox(height: 16),
-
-                                      // NIC Field
-                                      TextFormField(
-                                        controller: _nicController,
-                                        keyboardType: TextInputType.text,
-                                        textInputAction: TextInputAction.next,
-                                        textCapitalization:
-                                            TextCapitalization.characters,
-                                        decoration: InputDecoration(
-                                          labelText: 'NIC',
-                                          hintText:
-                                              'Enter your NIC (e.g., 123456789V or 200012345678)',
-                                          //helperText: 'Old: 9 digits + letter, New: 12 digits',
-                                          helperMaxLines: 2,
-                                          prefixIcon: Icon(
-                                            Icons.badge_outlined,
-                                            color: Colors.green.shade600,
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey[300]!,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.green.shade600,
-                                              width: 2,
-                                            ),
-                                          ),
-                                        ),
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.trim().isEmpty) {
-                                            return 'Please enter your NIC';
-                                          }
-
-                                          final cleanValue = value
-                                              .trim()
-                                              .toUpperCase();
-
-                                          // Old format: 9 digits + 1 letter (e.g., 123456789A)
-                                          final oldFormatRegex = RegExp(
-                                            r'^[0-9]{9}[A-Z]$',
-                                          );
-
-                                          // New format: 12 digits (e.g., 123456789012)
-                                          final newFormatRegex = RegExp(
-                                            r'^[0-9]{12}$',
-                                          );
-
-                                          if (!oldFormatRegex.hasMatch(
-                                                cleanValue,
-                                              ) &&
-                                              !newFormatRegex.hasMatch(
-                                                cleanValue,
-                                              )) {
-                                            return 'Invalid NIC format. Use 9 digits + letter or 12 digits';
-                                          }
-
-                                          return null;
-                                        },
-                                      ),
-                                      const SizedBox(height: 16),
-
-                                      // Checker ID Field
-                                      TextFormField(
-                                        controller: _checkerIdController,
-                                        keyboardType: TextInputType.text,
-                                        textInputAction: TextInputAction.next,
-                                        decoration: InputDecoration(
-                                          labelText: 'Checker ID',
-                                          hintText: 'Enter your Checker ID',
-                                          prefixIcon: Icon(
-                                            Icons.check_circle_outline,
-                                            color: Colors.green.shade600,
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey[300]!,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.green.shade600,
-                                              width: 2,
-                                            ),
-                                          ),
-                                        ),
-                                        validator: (value) {
-                                          if (value == null ||
-                                              value.trim().isEmpty) {
-                                            return 'Please enter your Checker ID';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-
-                                      const SizedBox(height: 16),
-                                      // Password Field
-                                      TextFormField(
-                                        controller: _passwordController,
-                                        obscureText: !_isPasswordVisible,
-                                        textInputAction: TextInputAction.next,
-                                        decoration: InputDecoration(
-                                          labelText: 'Password',
-                                          hintText: 'Enter your password',
-                                          prefixIcon: Icon(
-                                            Icons.lock_outline,
-                                            color: Colors.green.shade600,
-                                          ),
-                                          suffixIcon: Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                              0,
-                                              0,
-                                              5,
-                                              0,
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(
-                                                _isPasswordVisible
-                                                    ? Icons.visibility_outlined
-                                                    : Icons
-                                                          .visibility_off_outlined,
-                                              ),
-                                              onPressed: () {
-                                                setState(() {
-                                                  _isPasswordVisible =
-                                                      !_isPasswordVisible;
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey[300]!,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Theme.of(
-                                                context,
-                                              ).primaryColor,
-                                              width: 2,
-                                            ),
-                                          ),
-                                        ),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please enter your password';
-                                          }
-                                          if (value.length < 6) {
-                                            return 'Password must be at least 6 characters';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                      const SizedBox(height: 16),
-
-                                      // Confirm Password Field
-                                      TextFormField(
-                                        controller: _confirmPasswordController,
-                                        obscureText: !_isConfirmPasswordVisible,
-                                        textInputAction: TextInputAction.done,
-                                        onFieldSubmitted: (_) =>
-                                            _handleSubmit(),
-                                        decoration: InputDecoration(
-                                          labelText: 'Confirm Password',
-                                          hintText: 'Re-enter your password',
-                                          prefixIcon: Icon(
-                                            Icons.lock_outline,
-                                            color: Colors.green.shade600,
-                                          ),
-                                          suffixIcon: Padding(
-                                            padding: const EdgeInsets.fromLTRB(
-                                              0,
-                                              0,
-                                              5,
-                                              0,
-                                            ),
-                                            child: IconButton(
-                                              icon: Icon(
-                                                _isConfirmPasswordVisible
-                                                    ? Icons.visibility_outlined
-                                                    : Icons
-                                                          .visibility_off_outlined,
-                                              ),
-                                              onPressed: () {
-                                                setState(() {
-                                                  _isConfirmPasswordVisible =
-                                                      !_isConfirmPasswordVisible;
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Colors.grey[300]!,
-                                            ),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            borderSide: BorderSide(
-                                              color: Theme.of(
-                                                context,
-                                              ).primaryColor,
-                                              width: 2,
-                                            ),
-                                          ),
-                                        ),
-                                        validator: (value) {
-                                          if (value == null || value.isEmpty) {
-                                            return 'Please confirm your password';
-                                          }
-                                          if (value !=
-                                              _passwordController.text) {
-                                            return 'Passwords do not match';
-                                          }
-                                          return null;
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-
-                                // Register Button
-                                GestureDetector(
-                                  onTap: _isLoading ? null : _handleSubmit,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 18,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                        colors: [
-                                          Colors.green.shade400,
-                                          Colors.green.shade600,
-                                        ],
-                                      ),
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.green.withOpacity(0.3),
-                                          blurRadius: 15,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Center(
-                                      child: _isLoading
-                                          ? const SizedBox(
-                                              height: 20,
-                                              width: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                      Color
-                                                    >(Colors.white),
-                                              ),
-                                            )
-                                          : const Text(
-                                              'Register',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.w700,
-                                                letterSpacing: 0.5,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-
-                                // Login Link
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Already have an account? ',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 15,
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text(
-                                        'Login',
-                                        style: TextStyle(
-                                          color: Colors.green.shade600,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 24),
-                              ],
-                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                 ],
+              ),
+
+              // Registration form container
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: width * 0.06,
+                  vertical: height * 0.03,
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: width * 0.05,
+                          vertical: height * 0.025,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.06),
+                              blurRadius: 15,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            // Name Field
+                            TextFormField(
+                              controller: _nameController,
+                              keyboardType: TextInputType.name,
+                              textInputAction: TextInputAction.next,
+                              textCapitalization: TextCapitalization.words,
+                              decoration: InputDecoration(
+                                labelText: 'Full Name',
+                                hintText: 'Enter your full name',
+                                prefixIcon: Icon(
+                                  Icons.person_outline,
+                                  color: Colors.green.shade600,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[300]!,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.green.shade600,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter your name';
+                                }
+                                if (value.trim().length < 2) {
+                                  return 'Name must be at least 2 characters';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: height * 0.02),
+
+                            // Email Field
+                            TextFormField(
+                              controller: _emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                hintText: 'Enter your email',
+                                prefixIcon: Icon(
+                                  Icons.email_outlined,
+                                  color: Colors.green.shade600,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[300]!,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.green.shade600,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter your email';
+                                }
+                                final emailRegex = RegExp(
+                                  r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                                );
+                                if (!emailRegex.hasMatch(value.trim())) {
+                                  return 'Please enter a valid email';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: height * 0.02),
+
+                            // NIC Field
+                            TextFormField(
+                              controller: _nicController,
+                              keyboardType: TextInputType.text,
+                              textInputAction: TextInputAction.next,
+                              textCapitalization: TextCapitalization.characters,
+                              decoration: InputDecoration(
+                                labelText: 'NIC',
+                                hintText: 'Enter your NIC',
+                                prefixIcon: Icon(
+                                  Icons.badge_outlined,
+                                  color: Colors.green.shade600,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[300]!,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.green.shade600,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter your NIC';
+                                }
+                                final cleanValue = value.trim().toUpperCase();
+                                final oldFormatRegex = RegExp(
+                                  r'^[0-9]{9}[A-Z]$',
+                                );
+                                final newFormatRegex = RegExp(r'^[0-9]{12}$');
+                                if (!oldFormatRegex.hasMatch(cleanValue) &&
+                                    !newFormatRegex.hasMatch(cleanValue)) {
+                                  return 'Invalid NIC format';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: height * 0.02),
+
+                            // Checker ID Field
+                            TextFormField(
+                              controller: _checkerIdController,
+                              keyboardType: TextInputType.text,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: 'Checker ID',
+                                hintText: 'Enter your Checker ID',
+                                prefixIcon: Icon(
+                                  Icons.check_circle_outline,
+                                  color: Colors.green.shade600,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[300]!,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.green.shade600,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.trim().isEmpty) {
+                                  return 'Please enter your Checker ID';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: height * 0.02),
+
+                            // Password Field
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: !_isPasswordVisible,
+                              textInputAction: TextInputAction.next,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                hintText: 'Enter your password',
+                                prefixIcon: Icon(
+                                  Icons.lock_outline,
+                                  color: Colors.green.shade600,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isPasswordVisible
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: Colors.grey[600],
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isPasswordVisible = !_isPasswordVisible;
+                                    });
+                                  },
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[300]!,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.green.shade600,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your password';
+                                }
+                                if (value.length < 6) {
+                                  return 'Password must be at least 6 characters';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: height * 0.02),
+
+                            // Confirm Password Field
+                            TextFormField(
+                              controller: _confirmPasswordController,
+                              obscureText: !_isConfirmPasswordVisible,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _handleSubmit(),
+                              decoration: InputDecoration(
+                                labelText: 'Confirm Password',
+                                hintText: 'Re-enter your password',
+                                prefixIcon: Icon(
+                                  Icons.lock_outline,
+                                  color: Colors.green.shade600,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isConfirmPasswordVisible
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                    color: Colors.grey[600],
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isConfirmPasswordVisible =
+                                          !_isConfirmPasswordVisible;
+                                    });
+                                  },
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey[300]!,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: Colors.green.shade600,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please confirm your password';
+                                }
+                                if (value != _passwordController.text) {
+                                  return 'Passwords do not match';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: height * 0.04),
+
+                      // Register button
+                      GestureDetector(
+                        onTap: _isLoading ? null : _handleSubmit,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            vertical: height * 0.02,
+                          ),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Colors.green.shade400,
+                                Colors.green.shade600,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.green.withOpacity(0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : Text(
+                                    'Register',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: width * 0.045,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: height * 0.03),
+
+                      // Login link
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Already have an account? ',
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                              fontSize: width * 0.04,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: Text(
+                              'Login',
+                              style: TextStyle(
+                                color: Colors.green.shade600,
+                                fontWeight: FontWeight.bold,
+                                fontSize: width * 0.04,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

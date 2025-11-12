@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/home/home_screen.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/profile/profile_screen.dart';
 import 'package:ruh_fyp_railway_ticket_verification_app/features/settings/settings_screen.dart';
@@ -12,6 +13,36 @@ class CustomBottomNavBar extends StatefulWidget {
 
 class _CustomBottomNavBarState extends State<CustomBottomNavBar> {
   int _currentIndex = 1; // Start with Home (middle item)
+
+  @override
+  void initState() {
+    super.initState();
+    // Request camera permission when app opens (after login)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _requestCameraPermissionOnAppOpen();
+    });
+  }
+
+  /// Request camera permission immediately when the main screen loads
+  /// This ensures the permission appears in iOS Settings
+  Future<void> _requestCameraPermissionOnAppOpen() async {
+    try {
+      final status = await Permission.camera.status;
+      print('Camera permission status: $status');
+
+      // Always request if not already granted
+      // This covers: denied, restricted, limited, and not determined states
+      if (!status.isGranted) {
+        print('Requesting camera permission...');
+        final result = await Permission.camera.request();
+        print('Camera permission result: $result');
+      } else {
+        print('Camera permission already granted');
+      }
+    } catch (e) {
+      print('Error requesting camera permission: $e');
+    }
+  }
 
   // List of screens for each tab
   final List<Widget> _screens = [

@@ -187,7 +187,10 @@ class _QRResultScreenState extends State<QRResultScreen> {
         _currentUserId = _bookingDetails!.userId!;
       });
 
-      await _loadFraudBookings();
+      if (transactionController.bookingDetails!.isReviewed == true &&
+          transactionController.bookingDetails!.isFraudConfirmed == true) {
+        await _loadFraudBookings();
+      }
 
       if (!mounted) return;
 
@@ -201,11 +204,6 @@ class _QRResultScreenState extends State<QRResultScreen> {
             return;
           });
         }
-
-        // if (transactionController.bookingDetails!.isReviewed == true &&
-        //     transactionController.bookingDetails!.isFraudConfirmed == true) {
-        //   _suspicionDetected = true;
-        // }
 
         if (transactionController.bookingDetails!.isChecked == true) {
           _isCheckedBefore = true;
