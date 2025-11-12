@@ -1295,224 +1295,366 @@ class _QRResultScreenState extends State<QRResultScreen> {
   }) {
     final TextEditingController remarksController = TextEditingController();
     final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+    String? selectedSuggestion;
+
+    // Common suggestions based on approval/rejection
+    final List<String> approvalSuggestions = [
+      'All passenger details verified and valid',
+      'Valid ticket with proper identification',
+      'Ticket matches travel details and schedule',
+      'Passenger information confirmed',
+      'Documents verified successfully',
+    ];
+
+    final List<String> rejectionSuggestions = [
+      'Invalid or suspicious ticket information',
+      'Passenger identification does not match',
+      'Ticket has been tampered or altered',
+      'Travel date/time does not match schedule',
+      'Duplicate or fraudulent booking detected',
+    ];
+
+    final suggestions = isApproval ? approvalSuggestions : rejectionSuggestions;
 
     // Capture the scaffold context BEFORE showing any dialog
     final scaffoldContext = context;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              isApproval ? Icons.check_circle_outline : Icons.cancel_outlined,
-              color: isApproval ? Colors.green : Colors.red,
-              size: 28,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                isApproval ? 'Approve Ticket' : 'Reject Ticket',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (stateContext, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                isApproval ? Icons.check_circle_outline : Icons.cancel_outlined,
+                color: isApproval ? Colors.green : Colors.red,
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  isApproval ? 'Approve Ticket' : 'Reject Ticket',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isApproval
-                      ? 'Are you sure you want to approve this ticket?'
-                      : 'Are you sure you want to reject this ticket?',
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(8),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isApproval
+                        ? 'Are you sure you want to approve this ticket?'
+                        : 'Are you sure you want to reject this ticket?',
+                    style: const TextStyle(fontSize: 16),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildInfoRow(
-                        'Reference',
-                        booking.bookingReference ?? 'N/A',
-                        Icons.confirmation_number,
-                      ),
-                      const SizedBox(height: 8),
-                      _buildInfoRow(
-                        'Passengers',
-                        booking.passengerCount.toString(),
-                        Icons.people,
-                      ),
-                      if (booking.routeInfo != 'N/A') ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildInfoRow(
+                          'Reference',
+                          booking.bookingReference ?? 'N/A',
+                          Icons.confirmation_number,
+                        ),
                         const SizedBox(height: 8),
-                        _buildInfoRow('Route', booking.routeInfo, Icons.route),
+                        _buildInfoRow(
+                          'Passengers',
+                          booking.passengerCount.toString(),
+                          Icons.people,
+                        ),
+                        if (booking.routeInfo != 'N/A') ...[
+                          const SizedBox(height: 8),
+                          _buildInfoRow(
+                            'Route',
+                            booking.routeInfo,
+                            Icons.route,
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Checker Remarks (Required)',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: remarksController,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: isApproval
-                        ? 'Enter your remarks for approving this ticket...'
-                        : 'Please describe the suspicious activity or reason for rejecting this ticket.',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(
-                        color: isApproval ? Colors.green : Colors.red,
-                        width: 2,
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'Checker Remarks (Required)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Quick suggestions
+                  Text(
+                    'Quick Suggestions:',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: suggestions.map((suggestion) {
+                      final isSelected = selectedSuggestion == suggestion;
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            selectedSuggestion = suggestion;
+                            remarksController.text = suggestion;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? (isApproval
+                                      ? Colors.green.shade50
+                                      : Colors.red.shade50)
+                                : Colors.grey.shade100,
+                            border: Border.all(
+                              color: isSelected
+                                  ? (isApproval
+                                        ? Colors.green.shade600
+                                        : Colors.red.shade600)
+                                  : Colors.grey.shade300,
+                              width: isSelected ? 2 : 1,
+                            ),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            suggestion,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? (isApproval
+                                        ? Colors.green.shade700
+                                        : Colors.red.shade700)
+                                  : Colors.grey[700],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Or type custom remarks:',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: remarksController,
+                    maxLines: 4,
+                    onChanged: (value) {
+                      setState(() {
+                        // Clear selection if user starts typing something different
+                        if (selectedSuggestion != null &&
+                            value != selectedSuggestion) {
+                          selectedSuggestion = null;
+                        }
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: isApproval
+                          ? 'Enter your remarks for approving this ticket...'
+                          : 'Please describe the suspicious activity or reason for rejecting this ticket.',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey.shade50,
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return isApproval
-                          ? 'Please provide remarks for approval'
-                          : 'Please provide a reason for rejecting this ticket';
-                    }
-                    return null;
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                // Close the confirmation dialog first
-                Navigator.of(dialogContext).pop();
-
-                // Show loading indicator using the scaffold context
-                showDialog(
-                  context: scaffoldContext,
-                  barrierDismissible: false,
-                  builder: (loadingDialogContext) => Center(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                isApproval ? Colors.green : Colors.red,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              isApproval
-                                  ? 'Approving ticket...'
-                                  : 'Rejecting ticket...',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: isApproval ? Colors.green : Colors.red,
+                          width: 2,
                         ),
                       ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
                     ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return isApproval
+                            ? 'Please provide remarks for approval'
+                            : 'Please provide a reason for rejecting this ticket';
+                      }
+                      return null;
+                    },
                   ),
-                );
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  // Close the confirmation dialog first
+                  Navigator.of(dialogContext).pop();
 
-                try {
-                  // Get the transaction controller
-                  final transactionController =
-                      Provider.of<TransactionController>(
-                        scaffoldContext,
-                        listen: false,
-                      );
-
-                  // Create CheckerRemarks object
-                  final remarks = CheckerRemarks(
-                    id: const Uuid().v4(),
-                    checkerRemark: remarksController.text.trim(),
-                    isApproved: isApproval,
-                    isChecked: true,
-                    bookingId: booking.bookingId,
-                    checkedBy: _currentUser.postgresId,
-                    checkedOn: DateTime.now(),
-                  );
-
-                  // Update checker remarks and get success status
-                  final isSuccess = await transactionController
-                      .updateCheckerRemarks(remarks: remarks);
-
-                  // Close loading dialog
-                  if (scaffoldContext.mounted) {
-                    Navigator.of(scaffoldContext).pop();
-
-                    if (isSuccess) {
-                      // Show success message
-                      ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                        SnackBar(
-                          content: Row(
+                  // Show loading indicator using the scaffold context
+                  showDialog(
+                    context: scaffoldContext,
+                    barrierDismissible: false,
+                    builder: (loadingDialogContext) => Center(
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                isApproval ? Icons.check_circle : Icons.flag,
-                                color: Colors.white,
+                              CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  isApproval ? Colors.green : Colors.red,
+                                ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  isApproval
-                                      ? 'Ticket approved successfully!'
-                                      : 'Ticket rejected successfully!',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                              const SizedBox(height: 16),
+                              Text(
+                                isApproval
+                                    ? 'Approving ticket...'
+                                    : 'Rejecting ticket...',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
                           ),
-                          backgroundColor: isApproval
-                              ? Colors.green
-                              : Colors.red,
-                          duration: const Duration(seconds: 3),
-                          behavior: SnackBarBehavior.floating,
                         ),
-                      );
+                      ),
+                    ),
+                  );
 
-                      // Go back to home
+                  try {
+                    // Get the transaction controller
+                    final transactionController =
+                        Provider.of<TransactionController>(
+                          scaffoldContext,
+                          listen: false,
+                        );
+
+                    // Create CheckerRemarks object
+                    final remarks = CheckerRemarks(
+                      id: const Uuid().v4(),
+                      checkerRemark: remarksController.text.trim(),
+                      isApproved: isApproval,
+                      isChecked: true,
+                      bookingId: booking.bookingId,
+                      checkedBy: _currentUser.postgresId,
+                      checkedOn: DateTime.now(),
+                    );
+
+                    // Update checker remarks and get success status
+                    final isSuccess = await transactionController
+                        .updateCheckerRemarks(remarks: remarks);
+
+                    // Close loading dialog
+                    if (scaffoldContext.mounted) {
                       Navigator.of(scaffoldContext).pop();
-                    } else {
-                      // Show failure message
+
+                      if (isSuccess) {
+                        // Show success message
+                        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                Icon(
+                                  isApproval ? Icons.check_circle : Icons.flag,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    isApproval
+                                        ? 'Ticket approved successfully!'
+                                        : 'Ticket rejected successfully!',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: isApproval
+                                ? Colors.green
+                                : Colors.red,
+                            duration: const Duration(seconds: 3),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+
+                        // Go back to home
+                        Navigator.of(scaffoldContext).pop();
+                      } else {
+                        // Show failure message
+                        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(
+                                  Icons.error_outline,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    isApproval
+                                        ? 'Failed to approve ticket. Please try again.'
+                                        : 'Failed to reject ticket. Please try again.',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: Colors.red.shade700,
+                            duration: const Duration(seconds: 5),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    }
+                  } catch (e) {
+                    // Close loading dialog
+                    if (scaffoldContext.mounted) {
+                      Navigator.of(scaffoldContext).pop();
+
+                      // Show error message
                       ScaffoldMessenger.of(scaffoldContext).showSnackBar(
                         SnackBar(
                           content: Row(
@@ -1524,9 +1666,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  isApproval
-                                      ? 'Failed to approve ticket. Please try again.'
-                                      : 'Failed to reject ticket. Please try again.',
+                                  'Error: ${e.toString()}',
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -1542,54 +1682,25 @@ class _QRResultScreenState extends State<QRResultScreen> {
                       );
                     }
                   }
-                } catch (e) {
-                  // Close loading dialog
-                  if (scaffoldContext.mounted) {
-                    Navigator.of(scaffoldContext).pop();
-
-                    // Show error message
-                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          children: [
-                            const Icon(
-                              Icons.error_outline,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Error: ${e.toString()}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        backgroundColor: Colors.red.shade700,
-                        duration: const Duration(seconds: 5),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
                 }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isApproval
-                  ? Colors.green.shade700
-                  : Colors.red.shade700,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isApproval
+                    ? Colors.green.shade700
+                    : Colors.red.shade700,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
+              child: Text(isApproval ? 'Approve' : 'Reject'),
             ),
-            child: Text(isApproval ? 'Approve' : 'Reject'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1804,7 +1915,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                       const Icon(Icons.speed, size: 14, color: Colors.white),
                       const SizedBox(width: 4),
                       Text(
-                        '${booking.fraudScore}%',
+                        '${booking.fraudScore! * 100}%',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -1852,15 +1963,34 @@ class _QRResultScreenState extends State<QRResultScreen> {
               ),
             ],
           ),
+
+          const SizedBox(height: 8),
+          // Booking Date
+          Row(
+            children: [
+              // Icon(Icons.railway_alert, size: 16, color: Colors.grey[600]),
+              // const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Admin Remark: ${booking.adminRemark}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Color _getFraudScoreColor(int score) {
-    if (score >= 80) {
+  Color _getFraudScoreColor(double score) {
+    if (score * 100 >= 80) {
       return Colors.red.shade700;
-    } else if (score >= 60) {
+    } else if (score * 100 >= 60) {
       return Colors.orange.shade700;
     } else {
       return Colors.amber.shade700;

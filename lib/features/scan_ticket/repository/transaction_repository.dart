@@ -369,6 +369,7 @@ class TransactionRepository {
           "BookingReference",
           "Route",
           "TransactionDateTime",
+          "AdminRemark",
           "IsReviewed",
           "IsFraudConfirmed",
           "FraudScore"
@@ -406,9 +407,10 @@ class TransactionRepository {
           bookingReference: rowMap['BookingReference']?.toString(),
           route: rowMap['Route']?.toString(),
           bookingDate: rowMap['TransactionDateTime']?.toString(),
+          adminRemark: rowMap['AdminRemark']?.toString(),
           isReviewed: rowMap['IsReviewed'] as bool?,
           isFraudConfirmed: rowMap['IsFraudConfirmed'] as bool?,
-          fraudScore: _parseInt(rowMap['FraudScore']),
+          fraudScore: _parseDouble(rowMap['FraudScore']),
         );
       }).toList();
 
