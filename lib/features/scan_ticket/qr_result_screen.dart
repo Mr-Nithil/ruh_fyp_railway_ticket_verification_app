@@ -1858,8 +1858,9 @@ class _QRResultScreenState extends State<QRResultScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Booking Reference
+          // Header with Booking Reference and Fraud Score
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
@@ -1886,7 +1887,7 @@ class _QRResultScreenState extends State<QRResultScreen> {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       booking.bookingReference ?? 'N/A',
                       style: const TextStyle(
@@ -1902,20 +1903,19 @@ class _QRResultScreenState extends State<QRResultScreen> {
               if (booking.fraudScore != null)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
+                    horizontal: 10,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
                     color: _getFraudScoreColor(booking.fraudScore!),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Column(
                     children: [
-                      const Icon(Icons.speed, size: 14, color: Colors.white),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.speed, size: 16, color: Colors.white),
+                      const SizedBox(height: 2),
                       Text(
-                        '${booking.fraudScore! * 100}%',
+                        '${(booking.fraudScore! * 100).toInt()}%',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -1930,60 +1930,74 @@ class _QRResultScreenState extends State<QRResultScreen> {
           const SizedBox(height: 12),
           Divider(color: Colors.grey.shade300, height: 1),
           const SizedBox(height: 12),
-          // Route
-          Row(
-            children: [
-              Icon(Icons.route, size: 16, color: Colors.grey[600]),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  booking.route ?? 'N/A',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Booking Date
-          Row(
-            children: [
-              Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
-              const SizedBox(width: 8),
-              Text(
-                'Booked: ${_formatDate(booking.bookingDate)}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[700],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
 
-          const SizedBox(height: 8),
+          // Route
+          _buildInfoItem(
+            icon: Icons.route,
+            label: 'Route',
+            value: booking.route ?? 'N/A',
+          ),
+          const SizedBox(height: 10),
+
           // Booking Date
-          Row(
-            children: [
-              // Icon(Icons.railway_alert, size: 16, color: Colors.grey[600]),
-              // const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Admin Remark: ${booking.adminRemark}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
+          _buildInfoItem(
+            icon: Icons.calendar_today,
+            label: 'Booked',
+            value: _formatDate(booking.bookingDate),
+          ),
+          const SizedBox(height: 10),
+
+          // Admin Remark
+          _buildInfoItem(
+            icon: Icons.admin_panel_settings_outlined,
+            label: 'Admin Remark',
+            value: booking.adminRemark ?? 'N/A',
+          ),
+          const SizedBox(height: 10),
+
+          // Reason
+          _buildInfoItem(
+            icon: Icons.warning_amber_outlined,
+            label: 'Reason',
+            value: booking.reason ?? 'N/A',
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInfoItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: Colors.grey[600]),
+        const SizedBox(width: 8),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.w500,
+              ),
+              children: [
+                TextSpan(
+                  text: '$label: ',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                TextSpan(
+                  text: value,
+                  style: const TextStyle(color: Colors.black87),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

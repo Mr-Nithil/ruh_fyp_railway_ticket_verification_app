@@ -9,6 +9,7 @@ class FraudBooking {
   final bool? isFraudConfirmed;
   final double? fraudScore;
   final String? adminRemark;
+  final String? reason;
 
   FraudBooking({
     required this.id,
@@ -21,5 +22,6 @@ class FraudBooking {
     this.isFraudConfirmed,
     this.fraudScore,
     this.adminRemark,
+    this.reason,
   });
 }
