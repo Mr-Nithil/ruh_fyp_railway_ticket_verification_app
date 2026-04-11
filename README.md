@@ -38,29 +38,25 @@ Feature-first + layered structure:
 
 ## Screenshots
 
-### 1. Login Procedure and Home Screen
-![Login Flow](docs/screenshots/login-flow.png)
+### 1. App Overview
 
-### 2. Train Selection
-![Train List](docs/screenshots/train-list.png)
+![Railway Ticket Verification App](docs/screenshots/Railway%20Ticket%20Verification%20App.png)
 
-### 3. QR Scanning
-![QR Scanner](docs/screenshots/qr.png)
+### 2. Login, Signup, and Home Screen
 
-### 4. Ticket Details Displayed After Successful Retrieval
-![Ticket Details Success](docs/screenshots/ticket-details-success.png)
+![Login Signup and Home Screen](docs/screenshots/Login,%20Signup%20and%20HomeScreen.png)
 
-### 5. Ticket Approval and Rejection Interface
-![Verification Interface](docs/screenshots/verification.png)
+### 3. Select Train, Scan Ticket, Ticket List, and Verification History
 
-### 6. Fraud Alert Notification Displayed for a Flagged Ticket
-![Fraud Result](docs/screenshots/fraud-result.png)
+![Select Train Scan Ticket Ticket List and Verification History](docs/screenshots/SelectTrain,%20ScanTicket,%20TicketList%20and%20VerificationHistory.png)
 
-### 7. Ticket List for Selected Train and Date
-![Ticket List](docs/screenshots/ticket-list.png)
+### 4. Valid Ticket Scenario
 
-### 8. Checker Verification History Screen
-![Checker History](docs/screenshots/history.png)
+![Valid Ticket Scenario](docs/screenshots/Valid%20Ticket%20Scenario.png)
+
+### 5. Fraud Ticket Scenario
+
+![Fraud Ticket Scenario](docs/screenshots/Fraud%20Ticket%20Scenario.png)
 
 ## Quick Run
 
