@@ -1,60 +1,71 @@
 # Railway Ticket Verification App
 
-A mobile app for railway ticket checkers to scan and verify QR tickets, make approval decisions, and maintain verification history.
+Railway Ticket Verification App is a production-style Flutter mobile application built for railway ticket checkers to scan QR-based tickets, validate traveler details in real time, and record verification decisions with an auditable workflow.
 
-## Demo
+![Railway Ticket Verification App Overview](docs/screenshots/Railway%20Ticket%20Verification%20App.png)
 
-- [LinkedIn Demo Video](https://www.linkedin.com/posts/nithil-sheshan-4a3945210_flutter-dart-firebase-activity-7442473107270868992-gKJN?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWIVHsBQyvJg7MFpZpjndpUXN6v4s4fnlE)
+## Overview
+
+The app supports secure checker authentication, train-based ticket filtering, instant QR scanning, and approval or rejection decisions with checker remarks. It was designed with a feature-first and layered structure so each workflow remains modular, maintainable, and easy to scale across transport verification operations.
+
+Demo: https://www.linkedin.com/posts/nithil-sheshan-4a3945210_flutter-dart-firebase-activity-7442473107270868992-gKJN?utm_source=share&utm_medium=member_desktop&rcm=ACoAADWIVHsBQyvJg7MFpZpjndpUXN6v4s4fnlE
 
 ## Key Features
 
-- Secure checker authentication
-- Train schedule selection before scanning
-- QR code scanning and ticket data retrieval
+- Secure sign up, login, and session handling for authorized ticket checkers
+- Train selection flow before scanning to scope verification to active schedules
+- Real-time QR scanning and ticket data retrieval
 - Ticket approval and rejection with checker remarks
-- Fraud alert display for flagged tickets
-- Ticket list for selected train/date
-- Checker verification history view
+- Fraud alert indication for suspicious or invalid ticket scenarios
+- Ticket list view filtered by selected train and date
+- Verification history tracking for operational audit and transparency
 
 ## Tech Stack
 
-- Flutter (Dart)
-- Provider (state management)
-- Firebase Authentication
-- Cloud Firestore
-- PostgreSQL
-- mobile_scanner
-- permission_handler
-- shared_preferences
+- Flutter and Dart
+- Provider for state management
+- Firebase Authentication for checker auth flows
+- Cloud Firestore for operational data and verification records
+- PostgreSQL for backend data integration
+- mobile_scanner for camera-based QR scanning
+- permission_handler for runtime permissions
+- shared_preferences for lightweight local persistence
 
-## Architecture (Simple)
+## Architecture
 
-Feature-first + layered structure:
+The app follows a feature-first layered architecture:
 
-- UI (screens/widgets)
-- Controllers (state and flow)
-- Repositories (data operations)
-- Services (Firebase, PostgreSQL, permissions, local storage)
+- Presentation layer: screens, widgets, and user interaction handling
+- Controller layer: state orchestration and verification flow coordination
+- Repository layer: data access abstraction across backend sources
+- Service layer: Firebase, PostgreSQL, permissions, and local storage integrations
+
+This separation keeps business workflows independent from UI rendering and infrastructure concerns, improving maintainability, testability, and long-term extensibility.
+
+## Patterns and Best Practices
+
+- Feature-first modular organization
+- Layered separation of concerns
+- Repository-based data access abstraction
+- Clear validation and decision flow for ticket verification
+- Reusable screen components for scanner, list, and result views
+- Persistent local preferences for smoother operator experience
 
 ## Screenshots
 
-### 1. App Overview
+### Authentication and Home
 
-![Railway Ticket Verification App](docs/screenshots/Railway%20Ticket%20Verification%20App.png)
+![Login, Signup and Home Screen](docs/screenshots/Login,%20Signup%20and%20HomeScreen.png)
 
-### 2. Login, Signup, and Home Screen
+### Train Selection, Scanner, Ticket List, and History
 
-![Login Signup and Home Screen](docs/screenshots/Login,%20Signup%20and%20HomeScreen.png)
+![Select Train, Scan Ticket, Ticket List and Verification History](docs/screenshots/SelectTrain,%20ScanTicket,%20TicketList%20and%20VerificationHistory.png)
 
-### 3. Select Train, Scan Ticket, Ticket List, and Verification History
-
-![Select Train Scan Ticket Ticket List and Verification History](docs/screenshots/SelectTrain,%20ScanTicket,%20TicketList%20and%20VerificationHistory.png)
-
-### 4. Valid Ticket Scenario
+### Valid Ticket Verification
 
 ![Valid Ticket Scenario](docs/screenshots/Valid%20Ticket%20Scenario.png)
 
-### 5. Fraud Ticket Scenario
+### Fraud Ticket Verification
 
 ![Fraud Ticket Scenario](docs/screenshots/Fraud%20Ticket%20Scenario.png)
 
@@ -64,3 +75,7 @@ Feature-first + layered structure:
 flutter pub get
 flutter run
 ```
+
+## What This Project Demonstrates
+
+This project reflects practical Flutter engineering for real-world transport operations, including secure authentication, QR-driven verification workflows, backend integration with Firebase and PostgreSQL, modular architecture, and maintainable feature delivery for field-level ticket checking.
